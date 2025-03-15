@@ -127,31 +127,31 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
             ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:sha-${{ github.sha }}
 
-  # 5. Сборка и публикация nginx образа
-  build_and_push_nginx:
-    name: Build and push nginx image
-    runs-on: ubuntu-latest
-    needs: linters
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push nginx image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./infra
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/foodgram_gateway:latest
-            ${{ secrets.DOCKER_USERNAME }}/foodgram_gateway:sha-${{ github.sha }}
+  # # 5. Сборка и публикация nginx образа
+  # build_and_push_nginx:
+  #   name: Build and push nginx image
+  #   runs-on: ubuntu-latest
+  #   needs: linters
+  #   steps:
+  #     - name: Check out the repo
+  #       uses: actions/checkout@v3
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v2
+  #     - name: Login to DockerHub
+  #       uses: docker/login-action@v2
+  #       with:
+  #         username: ${{ secrets.DOCKER_USERNAME }}
+  #         password: ${{ secrets.DOCKER_PASSWORD }}
+  #     - name: Build and push nginx image
+  #       uses: docker/build-push-action@v4
+  #       with:
+  #         context: ./infra
+  #         push: true
+  #         tags: |
+  #           ${{ secrets.DOCKER_USERNAME }}/foodgram_gateway:latest
+  #           ${{ secrets.DOCKER_USERNAME }}/foodgram_gateway:sha-${{ github.sha }}
 
-  # 6. Деплой на сервер через SSH
+  # 5. Деплой на сервер через SSH
   deploy:
     name: Deploy to Server
     runs-on: ubuntu-latest
@@ -201,7 +201,7 @@ jobs:
             echo "Перезапускается Nginx..."
             sudo docker compose -f docker-compose.production.yml restart nginx
 
-  # 7. Отправка уведомления в Telegram
+  # 6. Отправка уведомления в Telegram
   send_message:
     runs-on: ubuntu-latest
     needs: deploy
