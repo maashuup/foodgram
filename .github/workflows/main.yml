@@ -158,7 +158,7 @@ jobs:
     needs:
       - build_and_push_backend
       - build_and_push_frontend
-      - build_and_push_nginx
+      # - build_and_push_nginx
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
