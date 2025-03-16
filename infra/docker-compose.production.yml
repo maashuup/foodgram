@@ -33,7 +33,7 @@ services:
     container_name: foodgram-proxy
     image: nginx:1.25.4-alpine
     ports:
-      - "80:80"
+      - "8000:80"
     volumes:
       # связывает локальный файл nginx.conf с файлом default.conf внутри 
       # контейнера. Таким образом, изменения, внесенные 
