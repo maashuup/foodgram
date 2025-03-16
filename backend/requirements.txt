@@ -25,3 +25,4 @@ sqlparse==0.5.3
 typing_extensions==4.12.2
 urllib3==2.3.0
 python-dotenv
+gunicorn==20.1.0
