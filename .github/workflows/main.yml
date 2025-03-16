@@ -183,8 +183,8 @@ jobs:
             echo "Сбор статики Django..."
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
 
-            echo "Устанавливаем права на статику..."
-            sudo docker compose -f docker-compose.production.yml exec backend chmod -R 777 /usr/share/nginx/html/static/
+            # echo "Устанавливаем права на статику..."
+            # sudo docker compose -f docker-compose.production.yml exec backend chmod -R 777 /usr/share/nginx/html/static/
 
             echo "Перезапускается Nginx..."
             sudo docker compose -f docker-compose.production.yml restart nginx
