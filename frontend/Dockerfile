@@ -5,5 +5,5 @@ COPY package*.json ./
 RUN npm install
 COPY . ./
 RUN npm run build
-run cp -r build result_build
+RUN cp -r build result_build
 # CMD cp -r build result_build
