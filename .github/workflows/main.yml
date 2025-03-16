@@ -137,7 +137,7 @@ jobs:
       key: ${{ secrets.SSH_KEY }}
       passphrase: ${{ secrets.SSH_PASSPHRASE }}
       source: "infra/nginx.conf"
-      target: "foodgram/nginx.conf"
+      target: "foodgram"
 
   # 5. Деплой на сервер через SSH
   deploy:
