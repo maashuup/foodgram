@@ -26,3 +26,4 @@ typing_extensions==4.12.2
 urllib3==2.3.0
 python-dotenv
 gunicorn==20.1.0
+psycopg2-binary==2.9.3
