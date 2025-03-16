@@ -25,7 +25,7 @@ services:
     container_name: foodgram-front
     image: mashuup/foodgram_frontend:latest
     env_file: .env
-    command: cp -r /app/build/. /usr/share/nginx/html/
+    command: cp -r /app/result_build/. /usr/share/nginx/html/
     volumes:
       - static_volume:/usr/share/nginx/html
 
