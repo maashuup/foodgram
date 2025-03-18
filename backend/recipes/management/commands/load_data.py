@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         with open(file_path, encoding='utf-8') as file:
             reader = csv.reader(file)
-            next(reader)  # Пропуск заголовока
+            next(reader)
 
             for row in reader:
                 if len(row) != 2:
