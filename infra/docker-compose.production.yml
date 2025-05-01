@@ -34,6 +34,7 @@ services:
     image: nginx:1.25.4-alpine
     ports:
       - "8080:80"
+      
     env_file: .env
     volumes:
       # связывает локальный файл nginx.conf с файлом default.conf внутри 
