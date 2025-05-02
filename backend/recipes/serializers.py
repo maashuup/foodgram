@@ -199,7 +199,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True,
         write_only=True
     )
-    image = Base64ImageField(required=True, max_length=None, use_url=True)
+    image = Base64ImageField(
+        required=True,
+        max_length=None,
+        use_url=True
+    )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
@@ -320,14 +324,18 @@ class RecipeSerializer(serializers.ModelSerializer):
             seen_ids.add(ingr_id)
             if not isinstance(amount, int) or amount < 1:
                 raise serializers.ValidationError({
-                    "ingredients": "Количество ингредиента должно быть не менее 1."
+                    "ingredients": (
+                        "Количество ингредиента должно быть не менее 1."
+                    )
                 })
 
-        if not self.initial_data.get("text") or str(self.initial_data.get("text")).strip() == "":
-            raise serializers.ValidationError({
-                "text": "Необходимо указать описание рецепта."
-            })
-
+            if (
+                not self.initial_data.get("text")
+                or str(self.initial_data.get("text")).strip() == ""
+            ):
+                raise serializers.ValidationError({
+                    "text": "Необходимо указать описание рецепта."
+                })
         return attrs
 
     def validate_cooking_time(self, value):
