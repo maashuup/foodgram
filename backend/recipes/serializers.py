@@ -240,49 +240,93 @@ class RecipeSerializer(serializers.ModelSerializer):
             ).exists()
         )
 
+    # def validate(self, attrs):
+    #     """Валидация данных рецепта."""
+    #     request = self.context.get("request")
+    #     if self.instance and self.instance.author != request.user:
+    #         raise PermissionDenied("Вы не можете редактировать чужой рецепт.")
+    #     # ingredients = attrs.get("ingredient_amounts", [])
+    #     ingredients = self.initial_data.get("ingredients", [])
+    #     if not ingredients:
+    #         raise serializers.ValidationError(
+    #             {"ingredients": "Необходимо добавить хотя бы один ингредиент."}
+    #         )
+    #     tags = self.initial_data.get("tags")
+    #     if not tags:
+    #         raise serializers.ValidationError(
+    #             {"tags": "Необходимо указать хотя бы один тег."}
+    #         )
+    #     # tags = attrs.get("tags")
+    #     if tags and len(tags) != len(set([tag.id for tag in tags])):
+    #         raise serializers.ValidationError(
+    #             {"tags": "Теги должны быть уникальны."}
+    #         )
+    #     seen_ids = []
+    #     for item in ingredients:
+    #         # ingr_id = (
+    #         #     item['id'].id
+    #         #     if hasattr(item['id'], 'id')
+    #         #     else item['id']
+    #         # )
+    #         ingr_id = item.get('id')
+    #         if ingr_id in seen_ids:
+    #             raise serializers.ValidationError(
+    #                 {"ingredients": "Ингредиенты должны быть уникальны."}
+    #             )
+    #         seen_ids.append(ingr_id)
+    #         if item['amount'] < 1:
+    #             raise serializers.ValidationError(
+    #                 {"ingredients":
+    #                     "Количество ингредиента должно быть не менее 1."}
+    #             )
+    #     if not attrs.get("text") or str(attrs.get("text")).strip() == "":
+    #         raise serializers.ValidationError(
+    #             {"text": "Необходимо указать описание рецепта."}
+    #         )
+
+    #     return attrs
+
     def validate(self, attrs):
         """Валидация данных рецепта."""
         request = self.context.get("request")
         if self.instance and self.instance.author != request.user:
             raise PermissionDenied("Вы не можете редактировать чужой рецепт.")
-        # ingredients = attrs.get("ingredient_amounts", [])
+
         ingredients = self.initial_data.get("ingredients", [])
         if not ingredients:
-            raise serializers.ValidationError(
-                {"ingredients": "Необходимо добавить хотя бы один ингредиент."}
-            )
+            raise serializers.ValidationError({
+                "ingredients": "Необходимо добавить хотя бы один ингредиент."
+            })
+
         tags = self.initial_data.get("tags")
-        if not tags:
-            raise serializers.ValidationError(
-                {"tags": "Необходимо указать хотя бы один тег."}
-            )
-        # tags = attrs.get("tags")
-        if tags and len(tags) != len(set([tag.id for tag in tags])):
-            raise serializers.ValidationError(
-                {"tags": "Теги должны быть уникальны."}
-            )
-        seen_ids = []
+        if not tags or len(tags) == 0:
+            raise serializers.ValidationError({
+                "tags": "Необходимо указать хотя бы один тег."
+            })
+
+        if len(tags) != len(set(tags)):
+            raise serializers.ValidationError({
+                "tags": "Теги должны быть уникальны."
+            })
+
+        seen_ids = set()
         for item in ingredients:
-            # ingr_id = (
-            #     item['id'].id
-            #     if hasattr(item['id'], 'id')
-            #     else item['id']
-            # )
             ingr_id = item.get('id')
+            amount = item.get('amount')
             if ingr_id in seen_ids:
-                raise serializers.ValidationError(
-                    {"ingredients": "Ингредиенты должны быть уникальны."}
-                )
-            seen_ids.append(ingr_id)
-            if item['amount'] < 1:
-                raise serializers.ValidationError(
-                    {"ingredients":
-                        "Количество ингредиента должно быть не менее 1."}
-                )
-        if not attrs.get("text") or str(attrs.get("text")).strip() == "":
-            raise serializers.ValidationError(
-                {"text": "Необходимо указать описание рецепта."}
-            )
+                raise serializers.ValidationError({
+                    "ingredients": "Ингредиенты должны быть уникальны."
+                })
+            seen_ids.add(ingr_id)
+            if not isinstance(amount, int) or amount < 1:
+                raise serializers.ValidationError({
+                    "ingredients": "Количество ингредиента должно быть не менее 1."
+                })
+
+        if not self.initial_data.get("text") or str(self.initial_data.get("text")).strip() == "":
+            raise serializers.ValidationError({
+                "text": "Необходимо указать описание рецепта."
+            })
 
         return attrs
 
