@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -175,7 +176,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """"Сериализатор ингредиентов рецепта."""
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    # id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all()
+    id = serializers.IntegerField()
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
@@ -300,15 +302,43 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         return value
 
+    # def create(self, validated_data):
+    #     tags_data = validated_data.pop('tags', [])
+    #     ingredients_data = validated_data.pop('ingredient_amounts', [])
+    #     recipe = Recipe.objects.create(**validated_data)
+    #     recipe.tags.set(tags_data)
+    #     for ingredient_data in ingredients_data:
+    #         RecipeIngredient.objects.create(
+    #             recipe=recipe,
+    #             ingredient=ingredient_data['id'],
+    #             amount=ingredient_data['amount']
+    #         )
+    #     return recipe
+
+    # def update(self, instance, validated_data):
+    #     if 'ingredient_amounts' in validated_data:
+    #         ingredients_data = validated_data.pop('ingredient_amounts', [])
+    #         instance.ingredient_amounts.all().delete()
+    #         for ingredient_data in ingredients_data:
+    #             RecipeIngredient.objects.create(
+    #                 recipe=instance,
+    #                 ingredient=ingredient_data['id'],
+    #                 amount=ingredient_data['amount']
+    #             )
+    #     if 'tags' in validated_data:
+    #         instance.tags.set(validated_data.pop('tags', []))
+    #     return super().update(instance, validated_data)
+
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
         ingredients_data = validated_data.pop('ingredient_amounts', [])
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags_data)
         for ingredient_data in ingredients_data:
+            ingredient = get_object_or_404(Ingredient, id=ingredient_data['id'])
             RecipeIngredient.objects.create(
                 recipe=recipe,
-                ingredient=ingredient_data['id'],
+                ingredient=ingredient,
                 amount=ingredient_data['amount']
             )
         return recipe
@@ -318,9 +348,10 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredients_data = validated_data.pop('ingredient_amounts', [])
             instance.ingredient_amounts.all().delete()
             for ingredient_data in ingredients_data:
+                ingredient = get_object_or_404(Ingredient, id=ingredient_data['id'])
                 RecipeIngredient.objects.create(
                     recipe=instance,
-                    ingredient=ingredient_data['id'],
+                    ingredient=ingredient,
                     amount=ingredient_data['amount']
                 )
         if 'tags' in validated_data:
