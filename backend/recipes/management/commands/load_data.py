@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
     def load_csv(self):
         file_path = os.path.join(
-            settings.BASE_DIR, '..', 'data', 'ingredients.csv'
+            settings.BASE_DIR, 'data', 'ingredients.csv'
         )
         if not os.path.exists(file_path):
             self.stdout.write(
@@ -57,13 +57,13 @@ class Command(BaseCommand):
 
     def load_json(self):
         file_path = os.path.join(
-            settings.BASE_DIR, '..', 'data', 'ingredients.json'
+            settings.BASE_DIR, 'data', 'ingredients.json'
         )
         file_path = os.path.abspath(file_path)
 
         if not os.path.exists(file_path):
             self.stdout.write(
-                self.style.ERROR(f'JSON file not found: {file_path}')
+                self.style.ERROR(f'JSON-файл не найден: {file_path}')
             )
             return
 
