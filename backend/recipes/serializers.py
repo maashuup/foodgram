@@ -245,16 +245,18 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if self.instance and self.instance.author != request.user:
             raise PermissionDenied("Вы не можете редактировать чужой рецепт.")
-        ingredients = attrs.get("ingredient_amounts", [])
+        # ingredients = attrs.get("ingredient_amounts", [])
+        ingredients = self.initial_data.get("ingredients", [])
         if not ingredients:
             raise serializers.ValidationError(
                 {"ingredients": "Необходимо добавить хотя бы один ингредиент."}
             )
-        tags = attrs.get("tags")
-        if not tags or len(tags) == 0:
+        tags = self.initial_data.get("tags")
+        if not tags:
             raise serializers.ValidationError(
                 {"tags": "Необходимо указать хотя бы один тег."}
             )
+        # tags = attrs.get("tags")
         if tags and len(tags) != len(set([tag.id for tag in tags])):
             raise serializers.ValidationError(
                 {"tags": "Теги должны быть уникальны."}
