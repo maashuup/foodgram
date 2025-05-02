@@ -278,12 +278,22 @@ class RecipeSerializer(serializers.ModelSerializer):
                     "ingredients": "Ингредиенты должны быть уникальны."
                 })
             seen_ids.add(ingr_id)
-            if not isinstance(amount, int) or amount < 1:
+            # if not isinstance(amount, int) or amount < 1:
+            #     raise serializers.ValidationError({
+            #         "ingredients": (
+            #             "Количество ингредиента должно быть не менее 1."
+            #         )
+            #     })
+            try:
+                amount = int(amount)
+                if amount < 1:
+                    raise ValueError
+            except (ValueError, TypeError):
                 raise serializers.ValidationError({
-                    "ingredients": (
-                        "Количество ингредиента должно быть не менее 1."
-                    )
+                    "ingredients":
+                    "Количество ингредиента должно быть не менее 1."
                 })
+
 
             if (
                 not self.initial_data.get("text")
