@@ -294,7 +294,6 @@ class RecipeSerializer(serializers.ModelSerializer):
                     "Количество ингредиента должно быть не менее 1."
                 })
 
-
             if (
                 not self.initial_data.get("text")
                 or str(self.initial_data.get("text")).strip() == ""
