@@ -263,11 +263,12 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         seen_ids = []
         for item in ingredients:
-            ingr_id = (
-                item['id'].id
-                if hasattr(item['id'], 'id')
-                else item['id']
-            )
+            # ingr_id = (
+            #     item['id'].id
+            #     if hasattr(item['id'], 'id')
+            #     else item['id']
+            # )
+            ingr_id = item.get('id')
             if ingr_id in seen_ids:
                 raise serializers.ValidationError(
                     {"ingredients": "Ингредиенты должны быть уникальны."}
