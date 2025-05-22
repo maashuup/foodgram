@@ -317,9 +317,12 @@ class RecipeSerializer(serializers.ModelSerializer):
     #     recipe = Recipe.objects.create(**validated_data)
     #     recipe.tags.set(tags_data)
     #     for ingredient_data in ingredients_data:
+    #         ingredient = get_object_or_404(
+    #             Ingredient, id=ingredient_data['id']
+    #         )
     #         RecipeIngredient.objects.create(
     #             recipe=recipe,
-    #             ingredient=ingredient_data['id'],
+    #             ingredient=ingredient,
     #             amount=ingredient_data['amount']
     #         )
     #     return recipe
@@ -329,9 +332,12 @@ class RecipeSerializer(serializers.ModelSerializer):
     #         ingredients_data = validated_data.pop('ingredient_amounts', [])
     #         instance.ingredient_amounts.all().delete()
     #         for ingredient_data in ingredients_data:
+    #             ingredient = get_object_or_404(
+    #                 Ingredient, id=ingredient_data['id']
+    #             )
     #             RecipeIngredient.objects.create(
     #                 recipe=instance,
-    #                 ingredient=ingredient_data['id'],
+    #                 ingredient=ingredient,
     #                 amount=ingredient_data['amount']
     #             )
     #     if 'tags' in validated_data:
@@ -344,12 +350,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags_data)
         for ingredient_data in ingredients_data:
-            ingredient = get_object_or_404(
-                Ingredient, id=ingredient_data['id']
-            )
             RecipeIngredient.objects.create(
                 recipe=recipe,
-                ingredient=ingredient,
+                ingredient=ingredient_data['id'],
                 amount=ingredient_data['amount']
             )
         return recipe
@@ -359,12 +362,9 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredients_data = validated_data.pop('ingredient_amounts', [])
             instance.ingredient_amounts.all().delete()
             for ingredient_data in ingredients_data:
-                ingredient = get_object_or_404(
-                    Ingredient, id=ingredient_data['id']
-                )
                 RecipeIngredient.objects.create(
                     recipe=instance,
-                    ingredient=ingredient,
+                    ingredient=ingredient_data['id'],
                     amount=ingredient_data['amount']
                 )
         if 'tags' in validated_data:
