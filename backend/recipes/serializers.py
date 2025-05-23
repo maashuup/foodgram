@@ -371,7 +371,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 )
             return recipe
 
-    def update(self, instance, validated_data):
+      def update(self, instance, validated_data):
         if 'ingredient_amounts' in validated_data:
             ingredients_data = validated_data.pop('ingredient_amounts', [])
             instance.ingredient_amounts.all().delete()
