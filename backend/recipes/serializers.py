@@ -1,4 +1,3 @@
-import logging
 import re
 
 from django.contrib.auth import get_user_model
@@ -359,7 +358,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     #     return recipe
 
     def create(self, validated_data):
-        logger = logging.getLogger(__name__)
         try:
             tags_data = validated_data.pop('tags', [])
             ingredients_data = validated_data.pop('ingredient_amounts', [])
@@ -373,10 +371,8 @@ class RecipeSerializer(serializers.ModelSerializer):
                 )
             return recipe
         except Exception as e:
-            logger.exception('Ошибка при создании рецепта')
-            raise serializers.ValidationError(
-                {'detail': f'Ошибка при создании рецепта: {str(e)}'}
-            )
+            print(f'❌ Ошибка при создании рецепта: {str(e)}')
+            raise serializers.ValidationError({'detail': str(e)})
 
     def update(self, instance, validated_data):
         if 'ingredient_amounts' in validated_data:
