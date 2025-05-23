@@ -185,8 +185,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     @action(
-        detail=False,
-        methods=['post', 'delete'],
+        detail=True,
+        methods=['post', 'delete', 'get'],
         permission_classes=[IsAuthenticated]
     )
     def favorite(self, request, pk=None):
