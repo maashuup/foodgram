@@ -34,7 +34,6 @@ services:
     image: nginx:1.25.4-alpine
     ports:
       - "8080:80"
-      
     env_file: .env
     volumes:
       # 
@@ -52,3 +51,4 @@ services:
       # вы обновляете документацию на хосте, изменения автоматически отражаются
       # в контейнере без необходимости пересоздания контейнера.
       - ../docs/:/usr/share/nginx/html/api/docs/
+      - media_volume:/app/media
