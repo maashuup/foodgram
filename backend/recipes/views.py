@@ -185,7 +185,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     @action(
-        detail=True,
+        detail=False,
         methods=['post', 'delete'],
         permission_classes=[IsAuthenticated]
     )
