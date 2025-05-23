@@ -352,7 +352,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient_data in ingredients_data:
             RecipeIngredient.objects.create(
                 recipe=recipe,
-                ingredient=ingredient_data['id'],
+                ingredient=ingredient_data['ingredient'],
                 amount=ingredient_data['amount']
             )
         return recipe
@@ -364,7 +364,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             for ingredient_data in ingredients_data:
                 RecipeIngredient.objects.create(
                     recipe=instance,
-                    ingredient=ingredient_data['id'],
+                    ingredient=ingredient_data['ingredient'],
                     amount=ingredient_data['amount']
                 )
         if 'tags' in validated_data:
