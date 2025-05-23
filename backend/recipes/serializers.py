@@ -344,19 +344,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     #         instance.tags.set(validated_data.pop('tags', []))
     #     return super().update(instance, validated_data)
 
-    # def create(self, validated_data):
-    #     tags_data = validated_data.pop('tags', [])
-    #     ingredients_data = validated_data.pop('ingredient_amounts', [])
-    #     recipe = Recipe.objects.create(**validated_data)
-    #     recipe.tags.set(tags_data)
-    #     for ingredient_data in ingredients_data:
-    #         RecipeIngredient.objects.create(
-    #             recipe=recipe,
-    #             ingredient=ingredient_data['id'],
-    #             amount=ingredient_data['amount']
-    #         )
-    #     return recipe
-
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
         ingredients_data = validated_data.pop('ingredient_amounts', [])
@@ -365,7 +352,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient_data in ingredients_data:
             RecipeIngredient.objects.create(
                 recipe=recipe,
-                ingredient=ingredient_data['ingredient'],
+                ingredient=ingredient_data['id'],
                 amount=ingredient_data['amount']
             )
         return recipe
@@ -377,7 +364,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             for ingredient_data in ingredients_data:
                 RecipeIngredient.objects.create(
                     recipe=instance,
-                    ingredient=ingredient_data['ingredient'],
+                    ingredient=ingredient_data['id'],
                     amount=ingredient_data['amount']
                 )
         if 'tags' in validated_data:
