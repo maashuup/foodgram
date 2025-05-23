@@ -184,6 +184,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
         return super().destroy(request, *args, **kwargs)
 
+    def get_queryset(self):
+        queryset = Recipe.objects.all()
+        user = self.request.user
+
+        is_favorited = self.request.query_params.get('is_favorited')
+        if is_favorited in ('1', 'true') and user.is_authenticated:
+            queryset = queryset.filter(favorite_recipes__user=user)
+
+        return queryset
+
     @action(
         detail=True,
         methods=['post', 'delete'],
