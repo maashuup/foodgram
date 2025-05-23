@@ -186,7 +186,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete', 'get'],
+        methods=['post', 'delete'],
         permission_classes=[IsAuthenticated]
     )
     def favorite(self, request, pk=None):
@@ -223,6 +223,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 {'error': 'Рецепт не найден в избранном'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated]
+    )
+    def favorites(self, request):
+        """Список рецептов, добавленных в избранное текущим пользователем."""
+        recipes = Recipe.objects.filter(favorite_recipes__user=request.user)
+        serializer = self.get_serializer(
+            recipes, many=True, context={'request': request}
+        )
+        return Response(serializer.data)
 
     @action(
         detail=True,
