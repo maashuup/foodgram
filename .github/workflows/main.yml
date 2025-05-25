@@ -185,8 +185,6 @@ jobs:
             echo "Сбор статики Django..."
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
 
-            sudo docker compose logs backend --tail=100
-
             echo "Перезапускается Nginx..."
             sudo docker compose -f docker-compose.production.yml restart nginx
 
