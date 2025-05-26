@@ -25,7 +25,7 @@ services:
     container_name: foodgram-front
     image: mashuup/foodgram_frontend:latest
     env_file: .env
-    command: cp -r /app/result_build/. /usr/share/nginx/html/
+    command: cp -r /app/result_build/. /usr/share/nginx/html
     volumes:
       - static_volume:/usr/share/nginx/html
 
@@ -41,7 +41,6 @@ services:
       # контейнера. Таким образом, изменения, внесенные 
       # в nginx.conf на хосте, будут отражены в контейнере.
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      # - ./infra/nginx.conf:/etc/nginx/conf.d/default.conf
       # связывает том static_volume с директорией /usr/share/nginx/html/ 
       # внутри контейнера. Это позволяет контейнеру Nginx обращаться к файлам 
       # статического контента, таким как HTML, CSS и JavaScript, на хосте.
