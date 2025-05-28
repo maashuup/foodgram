@@ -11,7 +11,7 @@ Foodgram - это веб-приложение для публикации рец
 - Контейнеризация: Docker, Docker Compose
 - Веб-сервер: Nginx
 - Gunicorn: для запуска Django-приложения в продакшене
-- DevOps: Yandex Cloud (VPS), GitHub Actions
+- DevOps: Yandex Cloud, GitHub Actions
 
 ## Установка и запуск проекта
 
@@ -26,16 +26,14 @@ git clone https://github.com/maashuup/foodgram.git
 
 Создайте `.env` файл в корневой директории `foodgram` и добавьте в него:
 ```env
-DJANGO_SECRET_KEY=your-secret-key
-DJANGO_DEBUG=False
-ALLOWED_HOSTS=<домен>,<server_ip>
-DB_ENGINE=django.db.backends.postgresql
-DB_NAME=postgres
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=password
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_DB=django
 DB_HOST=db
-DB_PORT=5432
+DB_PORT=
+SECRET_KEY=
+DEBUG=False
+ALLOWED_HOSTS=
 ```
 
 ## 3. Автоматическое развертывание через GitHub Actions
