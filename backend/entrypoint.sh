@@ -1,6 +1,6 @@
 #!/bin/sh
 
-chown -R nginx:nginx /app/static
+chown -R nginx:nginx /app/backend_static
 
 echo "Applying migrations"
 
