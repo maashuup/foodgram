@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -17,9 +18,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Импорт данных завершен.'))
 
     def load_csv(self):
-        file_path = os.path.join(
-            settings.BASE_DIR, 'data', 'ingredients.csv'
-        )
+        file_path = Path(settings.BASE_DIR) / 'data' / 'ingredients.csv'
         if not os.path.exists(file_path):
             self.stdout.write(
                 self.style.ERROR(f'CSV-файл не найден: {file_path}')

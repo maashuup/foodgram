@@ -15,6 +15,7 @@ User = get_user_model()
 
 class UserSerializer(DjoserUserSerializer):
     """Сериализатор пользователя."""
+
     is_subscribed = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
 
@@ -40,6 +41,7 @@ class UserSerializer(DjoserUserSerializer):
 
 class CreateUserSerializer(UserSerializer):
     """Сериализатор создания пользователя."""
+
     class Meta:
         model = User
         fields = (
@@ -59,6 +61,7 @@ class CreateUserSerializer(UserSerializer):
 
 class UserSerializerForMe(UserSerializer):
     """Сериализатор для текущего пользователя."""
+
     is_subscribed = serializers.SerializerMethodField()
     avatar = serializers.ImageField(read_only=True)
 
@@ -75,6 +78,7 @@ class UserSerializerForMe(UserSerializer):
 
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор тегов."""
+
     class Meta:
         model = Tag
         fields = ('id', 'name', 'slug')
@@ -82,6 +86,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
     """Сериализатор подписок."""
+
     email = serializers.ReadOnlyField(source='following.email')
     id = serializers.ReadOnlyField(source='following.id')
     username = serializers.ReadOnlyField(source='following.username')
@@ -96,6 +101,19 @@ class FollowSerializer(serializers.ModelSerializer):
         model = Follow
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed', 'recipes', 'recipes_count', 'avatar')
+
+    def validate_following(self, value):
+        """Валидация подписки."""
+        user = self.context['request'].user
+        if user == value:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя.'
+            )
+        if Follow.objects.filter(user=user, following=value).exists():
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.'
+            )
+        return value
 
     def get_is_subscribed(self, obj):
         """Подписан ли пользователь на автора."""
@@ -160,6 +178,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор аватара."""
+
     avatar = Base64ImageField(required=True)
 
     class Meta:
@@ -169,6 +188,7 @@ class AvatarSerializer(serializers.ModelSerializer):
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор ингредиентов."""
+
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
@@ -176,7 +196,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """"Сериализатор ингредиентов рецепта."""
-    # id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all()
+
     id = serializers.IntegerField()
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -191,6 +211,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор рецептов."""
+
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(
         many=True,
@@ -278,12 +299,6 @@ class RecipeSerializer(serializers.ModelSerializer):
                     "ingredients": "Ингредиенты должны быть уникальны."
                 })
             seen_ids.add(ingr_id)
-            # if not isinstance(amount, int) or amount < 1:
-            #     raise serializers.ValidationError({
-            #         "ingredients": (
-            #             "Количество ингредиента должно быть не менее 1."
-            #         )
-            #     })
             try:
                 amount = int(amount)
                 if amount < 1:

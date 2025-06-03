@@ -6,6 +6,7 @@ from .models import Ingredient, Recipe
 
 class IngredientFilter(FilterSet):
     """Фильтр для ингредиентов – поиск по началу названия."""
+
     name = django_filters.CharFilter(
         field_name='name',
         lookup_expr='istartswith'

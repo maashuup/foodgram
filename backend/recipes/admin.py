@@ -8,6 +8,7 @@ from .models import (Favorite, Follow, Ingredient, Recipe, RecipeIngredient,
 @admin.register(User)
 class Admin(UserAdmin):
     """Настройка отображения пользователей в админке."""
+
     list_display = ('id', 'email', 'username', 'first_name', 'last_name',
                     'is_staff')
     search_fields = ('email', 'username')
@@ -38,6 +39,7 @@ class RecipeIngredientInline(admin.TabularInline):
 @admin.register(RecipeIngredient)
 class RecipeIngredientAdmin(admin.ModelAdmin):
     """Настройки админки для ингредиентов рецепта."""
+
     list_display = ('recipe', 'ingredient', 'amount')
     list_filter = ('recipe', 'ingredient')
 
@@ -45,6 +47,7 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     """Настройки админки для ингредиентов."""
+
     list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name',)
 
@@ -52,6 +55,7 @@ class IngredientAdmin(admin.ModelAdmin):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Настройки админки для рецептов."""
+
     list_display = ('id', 'name', 'author',)
     search_fields = ('name', 'author',)
     list_filter = ('tags',)
@@ -62,6 +66,7 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     """Настройки админки для тегов."""
+
     list_display = ('id', 'name', 'slug')
     search_fields = ('name',)
 
@@ -69,16 +74,19 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     """Настройки админки для избранного."""
+
     list_display = ('id', 'user', 'recipe')
 
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     """Настройки админки для корзины покупок."""
+
     list_display = ('id', 'user', 'recipe')
 
 
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     """Настройки админки для подписок."""
+
     list_display = ('id', 'user', 'following')
