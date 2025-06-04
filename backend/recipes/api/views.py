@@ -195,37 +195,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         """Добавление/удаление рецепта в избранное."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        if request.method == 'POST':
-            favorite, created = Favorite.objects.get_or_create(
-                user=request.user, recipe=recipe
-            )
-            if not created:
-                return Response(
-                    {'error': 'Рецепт уже в избранном'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            data = {
-                'id': recipe.id,
-                'name': recipe.name,
-                'image': (
-                    request.build_absolute_uri(recipe.image.url)
-                    if recipe.image else None
-                ),
-                'cooking_time': recipe.cooking_time
-            }
-            return Response(data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            favorite = Favorite.objects.filter(
-                user=request.user,
-                recipe=recipe
-            )
-            if favorite.exists():
-                favorite.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {'error': 'Рецепт не найден в избранном'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return handle_add_remove(
+            request,
+            recipe,
+            model=Favorite,
+            error_exists='Рецепт уже в избранном',
+            error_not_found='Рецепт не найден в избранном'
+        )
 
     @action(
         detail=False,
@@ -248,38 +224,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk=None):
         """Добавление/удаление рецепта в список покупок."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        if request.method == 'POST':
-            cart, created = ShoppingCart.objects.get_or_create(
-                user=request.user,
-                recipe=recipe
-            )
-            if not created:
-                return Response(
-                    {'error': 'Рецепт уже в списке покупок'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            data = {
-                'id': recipe.id,
-                'name': recipe.name,
-                'image': (
-                    request.build_absolute_uri(recipe.image.url)
-                    if recipe.image else None
-                ),
-                'cooking_time': recipe.cooking_time
-            }
-            return Response(data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            cart = ShoppingCart.objects.filter(
-                user=request.user,
-                recipe=recipe
-            )
-            if cart.exists():
-                cart.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {'error': 'Рецепт не найден в списке покупок'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return handle_add_remove(
+            request,
+            recipe,
+            model=ShoppingCart,
+            error_exists='Рецепт уже в списке покупок',
+            error_not_found='Рецепт не найден в списке покупок'
+        )
 
     @action(
         detail=True,
@@ -350,3 +301,33 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'attachment; filename="shopping_list.txt"'
         )
         return response
+
+def handle_add_remove(request, recipe, model, error_exists, error_not_found):
+    if request.method == 'POST':
+        obj, created = model.objects.get_or_create(
+            user=request.user, recipe=recipe
+        )
+        if not created:
+            return Response(
+                {'error': error_exists}, status=status.HTTP_400_BAD_REQUEST
+            )
+        data = {
+            'id': recipe.id,
+            'name': recipe.name,
+            'image': (
+                request.build_absolute_uri(recipe.image.url)
+                if recipe.image else None
+            ),
+            'cooking_time': recipe.cooking_time
+        }
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    if request.method == 'DELETE':
+        qs = model.objects.filter(user=request.user, recipe=recipe)
+        deleted, _ = qs.delete()
+        if deleted == 0:
+            return Response(
+                {'error': error_not_found},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
