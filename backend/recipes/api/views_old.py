@@ -72,39 +72,44 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscribe(self, request, id=None):
         """Подписка или отписка от пользователя."""
-        user_to_follow = get_object_or_404(User, pk=id)
+        try:
+            user_to_follow = User.objects.get(pk=id)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if request.user == user_to_follow:
+            return Response(
+                {'error': 'Нельзя подписаться на самого себя.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if request.method == 'POST':
-            data = {'following': user_to_follow.id}
-            serializer = FollowSerializer(
-                data=data,
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-            follow_obj = Follow.objects.get(
+            follow, created = Follow.objects.get_or_create(
                 user=request.user, following=user_to_follow
             )
-            return Response(
-                FollowSerializer(
-                    follow_obj,
-                    context={'request': request}
-                ).data,
-                status=status.HTTP_201_CREATED
+            if not created:
+                return Response(
+                    {'error': 'Вы уже подписаны на этого пользователя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            serializer = FollowSerializer(
+                follow, context={'request': request} if request else None
             )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
             follow_qs = Follow.objects.filter(
                 user=request.user, following=user_to_follow
             )
-
-            deleted, _ = follow_qs.delete()
-            if deleted == 0:
+            if not follow_qs.exists():
                 return Response(
                     {'error': 'Вы не подписаны на этого пользователя.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            follow_qs.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
