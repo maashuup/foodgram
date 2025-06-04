@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -55,7 +56,9 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscriptions(self, request):
         """Список подписок текущего пользователя (с пагинацией)."""
-        queryset = Follow.objects.filter(user=request.user)
+        queryset = Follow.objects.filter(user=request.user).annotate(
+            recipes_count=Count('following__recipes')
+        )
         page = self.paginate_queryset(queryset)
         serializer = FollowSerializer(
             page or queryset, many=True, context={'request': request}
