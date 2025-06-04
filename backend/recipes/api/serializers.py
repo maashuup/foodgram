@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from .fields import Base64ImageField
-from .models import (Follow, Ingredient, Recipe, RecipeIngredient,
+from recipes.models import (Follow, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Tag)
 
 User = get_user_model()

@@ -60,7 +60,7 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'author',)
     list_filter = ('tags',)
     filter_horizontal = ('ingredients',)
-    inlines = [RecipeIngredientInline]  # связь с ингредиентами
+    inlines = [RecipeIngredientInline]
 
 
 @admin.register(Tag)
