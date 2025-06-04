@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
 
 
@@ -11,7 +12,13 @@ class User(AbstractUser):
     username = models.CharField(
         unique=True,
         max_length=150,
-        verbose_name="Уникальный юзернейм"
+        verbose_name="Уникальный юзернейм",
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+$',
+                message='Разрешены только буквы, цифры и ./@/+/-/_.'
+            )
+        ]
     )
     first_name = models.CharField(
         max_length=150,
