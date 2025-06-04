@@ -6,9 +6,10 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
+from recipes.models import (Follow, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
+
 from .fields import Base64ImageField
-from .models import (Follow, Ingredient, Recipe, RecipeIngredient,
-                     ShoppingCart, Tag)
 
 User = get_user_model()
 
