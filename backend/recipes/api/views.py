@@ -21,12 +21,17 @@ from .serializers import (AvatarSerializer, FollowSerializer,
                           TagSerializer, UserSerializer, UserSerializerForMe)
 
 
+class PageLimitPagination(PageNumberPagination):
+    """Пагинация с лимитом количества объектов на странице."""
+    page_size = 6
+    page_size_query_param = 'limit'
+
+
 class UserViewSet(DjoserUserViewSet):
     """Вьюсет для управления пользователями."""
-
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = PageLimitPagination
 
     def get_serializer_class(self):
         """Для эндпоинта /me используется другой сериализатор."""
@@ -67,39 +72,44 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscribe(self, request, id=None):
         """Подписка или отписка от пользователя."""
-        user_to_follow = get_object_or_404(User, pk=id)
+        try:
+            user_to_follow = User.objects.get(pk=id)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if request.user == user_to_follow:
+            return Response(
+                {'error': 'Нельзя подписаться на самого себя.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if request.method == 'POST':
-            data = {'following': user_to_follow.id}
-            serializer = FollowSerializer(
-                data=data,
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-            follow_obj = Follow.objects.get(
+            follow, created = Follow.objects.get_or_create(
                 user=request.user, following=user_to_follow
             )
-            return Response(
-                FollowSerializer(
-                    follow_obj,
-                    context={'request': request}
-                ).data,
-                status=status.HTTP_201_CREATED
+            if not created:
+                return Response(
+                    {'error': 'Вы уже подписаны на этого пользователя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            serializer = FollowSerializer(
+                follow, context={'request': request} if request else None
             )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
             follow_qs = Follow.objects.filter(
                 user=request.user, following=user_to_follow
             )
-
-            deleted, _ = follow_qs.delete()
-            if deleted == 0:
+            if not follow_qs.exists():
                 return Response(
                     {'error': 'Вы не подписаны на этого пользователя.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            follow_qs.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -128,13 +138,14 @@ class UserViewSet(DjoserUserViewSet):
             )
         elif request.method == 'DELETE':
             if user.avatar:
-                user.avatar.delete()
+                user.avatar.delete(save=False)
+                user.avatar = None
+                user.save(update_fields=['avatar'])
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """Просмотр тегов."""
-
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [AllowAny]
@@ -143,7 +154,6 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Просмотр ингредиентов."""
-
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
@@ -154,10 +164,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Управление рецептами (создание, получение, редактирование, удаление)."""
-
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
-    pagination_class = PageNumberPagination
+    pagination_class = PageLimitPagination
+    queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -176,11 +186,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Recipe.objects.all().select_related(
-            'author'
-        ).prefetch_related(
-            'tags', 'ingredient_amounts__ingredient'
-        )
+        queryset = Recipe.objects.all()
+        user = self.request.user
+
+        is_favorited = self.request.query_params.get('is_favorited')
+        if is_favorited in ('1', 'true') and user.is_authenticated:
+            queryset = queryset.filter(favorite_recipes__user=user)
 
         return queryset
 
@@ -192,13 +203,37 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         """Добавление/удаление рецепта в избранное."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        return handle_add_remove(
-            request,
-            recipe,
-            model=Favorite,
-            error_exists='Рецепт уже в избранном',
-            error_not_found='Рецепт не найден в избранном'
-        )
+        if request.method == 'POST':
+            favorite, created = Favorite.objects.get_or_create(
+                user=request.user, recipe=recipe
+            )
+            if not created:
+                return Response(
+                    {'error': 'Рецепт уже в избранном'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            data = {
+                'id': recipe.id,
+                'name': recipe.name,
+                'image': (
+                    request.build_absolute_uri(recipe.image.url)
+                    if recipe.image else None
+                ),
+                'cooking_time': recipe.cooking_time
+            }
+            return Response(data, status=status.HTTP_201_CREATED)
+        elif request.method == 'DELETE':
+            favorite = Favorite.objects.filter(
+                user=request.user,
+                recipe=recipe
+            )
+            if favorite.exists():
+                favorite.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'error': 'Рецепт не найден в избранном'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(
         detail=False,
@@ -221,13 +256,38 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk=None):
         """Добавление/удаление рецепта в список покупок."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        return handle_add_remove(
-            request,
-            recipe,
-            model=ShoppingCart,
-            error_exists='Рецепт уже в списке покупок',
-            error_not_found='Рецепт не найден в списке покупок'
-        )
+        if request.method == 'POST':
+            cart, created = ShoppingCart.objects.get_or_create(
+                user=request.user,
+                recipe=recipe
+            )
+            if not created:
+                return Response(
+                    {'error': 'Рецепт уже в списке покупок'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            data = {
+                'id': recipe.id,
+                'name': recipe.name,
+                'image': (
+                    request.build_absolute_uri(recipe.image.url)
+                    if recipe.image else None
+                ),
+                'cooking_time': recipe.cooking_time
+            }
+            return Response(data, status=status.HTTP_201_CREATED)
+        elif request.method == 'DELETE':
+            cart = ShoppingCart.objects.filter(
+                user=request.user,
+                recipe=recipe
+            )
+            if cart.exists():
+                cart.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'error': 'Рецепт не найден в списке покупок'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(
         detail=True,
@@ -254,68 +314,47 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """Выгрузка списка покупок в файл с указанием рецептов и суммированием
         одинаковых ингредиентов."""
-        user = request.user
+        carts = (
+            ShoppingCart.objects
+            .filter(user=request.user)
+            .select_related('recipe')
+        )
 
-        # Получаем все ингредиенты через промежуточную модель
-        ingredients_qs = RecipeIngredient.objects.filter(
-            recipe__shopping_cart__user=user
-        ).select_related('ingredient')
+        if not carts.exists():
+            return Response(
+                {'error': 'Список покупок пуст'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         totals = defaultdict(lambda: {'amount': 0, 'unit': ''})
         recipes_used = set()
 
-        for ri in ingredients_qs:
-            name = ri.ingredient.name
-            totals[name]['amount'] += ri.amount
-            totals[name]['unit'] = ri.ingredient.measurement_unit
-            recipes_used.add(ri.recipe.name)
+        # Суммирование ингредиентов по названиям и сбор списка рецептов
+        for cart in carts:
+            recipe = cart.recipe
+            recipes_used.add(recipe.name)
+            for ri in (
+                RecipeIngredient.objects
+                .filter(recipe=recipe)
+                .select_related('ingredient')
+            ):
+                key = ri.ingredient.name
+                totals[key]['amount'] += ri.amount
+                totals[key]['unit'] = ri.ingredient.measurement_unit
 
-        return render_ingredients_txt(totals, recipes_used)
+        # Формирование списка для файла
+        lines = ['Список покупок:']
+        lines.append("\nИспользуемые рецепты:")
+        for recipe_name in sorted(recipes_used):
+            lines.append(f" - {recipe_name}")
 
+        lines.append("\nИнгредиенты:")
+        for name, data in totals.items():
+            lines.append(f" - {name}: {data['amount']} {data['unit']}")
 
-def render_ingredients_txt(ingredients_totals, recipes_used):
-    lines = ['Список покупок:']
-    lines.append('\nИспользуемые рецепты:')
-    for name in sorted(recipes_used):
-        lines.append(f'– {name}')
-    lines.append('\nИнгредиенты:')
-    for name, data in ingredients_totals.items():
-        lines.append(f'– {name}: {data["amount"]} {data["unit"]}')
-
-    content = '\n'.join(lines)
-    response = HttpResponse(content, content_type='text/plain')
-    response['Content-Disposition'] = (
-        'attachment; filename="shopping_list.txt"'
-    )
-    return response
-
-
-def handle_add_remove(request, recipe, model, error_exists, error_not_found):
-    if request.method == 'POST':
-        obj, created = model.objects.get_or_create(
-            user=request.user, recipe=recipe
+        content = "\n".join(lines)
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_list.txt"'
         )
-        if not created:
-            return Response(
-                {'error': error_exists}, status=status.HTTP_400_BAD_REQUEST
-            )
-        data = {
-            'id': recipe.id,
-            'name': recipe.name,
-            'image': (
-                request.build_absolute_uri(recipe.image.url)
-                if recipe.image else None
-            ),
-            'cooking_time': recipe.cooking_time
-        }
-        return Response(data, status=status.HTTP_201_CREATED)
-
-    if request.method == 'DELETE':
-        qs = model.objects.filter(user=request.user, recipe=recipe)
-        deleted, _ = qs.delete()
-        if deleted == 0:
-            return Response(
-                {'error': error_not_found},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return response
