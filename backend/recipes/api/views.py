@@ -178,7 +178,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         queryset = Recipe.objects.all().select_related(
             'author'
         ).prefetch_related(
-            'tags', 'ingredients'
+            'tags', 'ingredient_amounts__ingredient'
         )
 
         return queryset
