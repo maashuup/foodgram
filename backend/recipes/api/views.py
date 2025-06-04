@@ -303,7 +303,7 @@ def handle_add_remove(request, recipe, model, error_exists, error_not_found):
             'name': recipe.name,
             'image': (
                 request.build_absolute_uri(recipe.image.url)
-                if recipe.image else None
+                if recipe.image and recipe.image.name else None
             ),
             'cooking_time': recipe.cooking_time
         }
