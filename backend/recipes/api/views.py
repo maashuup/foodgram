@@ -302,6 +302,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         return response
 
+
 def handle_add_remove(request, recipe, model, error_exists, error_not_found):
     if request.method == 'POST':
         obj, created = model.objects.get_or_create(
