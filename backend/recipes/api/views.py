@@ -257,50 +257,40 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """Выгрузка списка покупок в файл с указанием рецептов и суммированием
         одинаковых ингредиентов."""
-        carts = (
-            ShoppingCart.objects
-            .filter(user=request.user)
-            .select_related('recipe')
-        )
+        user = request.user
 
-        if not carts.exists():
-            return Response(
-                {'error': 'Список покупок пуст'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Получаем все ингредиенты через промежуточную модель
+        ingredients_qs = RecipeIngredient.objects.filter(
+            recipe__shopping_cart__user=user
+        ).select_related('ingredient')
 
         totals = defaultdict(lambda: {'amount': 0, 'unit': ''})
         recipes_used = set()
 
-        # Суммирование ингредиентов по названиям и сбор списка рецептов
-        for cart in carts:
-            recipe = cart.recipe
-            recipes_used.add(recipe.name)
-            for ri in (
-                RecipeIngredient.objects
-                .filter(recipe=recipe)
-                .select_related('ingredient')
-            ):
-                key = ri.ingredient.name
-                totals[key]['amount'] += ri.amount
-                totals[key]['unit'] = ri.ingredient.measurement_unit
+        for ri in ingredients_qs:
+            name = ri.ingredient.name
+            totals[name]['amount'] += ri.amount
+            totals[name]['unit'] = ri.ingredient.measurement_unit
+            recipes_used.add(ri.recipe.name)
 
-        # Формирование списка для файла
-        lines = ['Список покупок:']
-        lines.append("\nИспользуемые рецепты:")
-        for recipe_name in sorted(recipes_used):
-            lines.append(f" - {recipe_name}")
+        return render_ingredients_txt(totals, recipes_used)
 
-        lines.append("\nИнгредиенты:")
-        for name, data in totals.items():
-            lines.append(f" - {name}: {data['amount']} {data['unit']}")
 
-        content = "\n".join(lines)
-        response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename="shopping_list.txt"'
-        )
-        return response
+def render_ingredients_txt(ingredients_totals, recipes_used):
+    lines = ['Список покупок:']
+    lines.append('\nИспользуемые рецепты:')
+    for name in sorted(recipes_used):
+        lines.append(f'– {name}')
+    lines.append('\nИнгредиенты:')
+    for name, data in ingredients_totals.items():
+        lines.append(f'– {name}: {data["amount"]} {data["unit"]}')
+
+    content = '\n'.join(lines)
+    response = HttpResponse(content, content_type='text/plain')
+    response['Content-Disposition'] = (
+        'attachment; filename="shopping_list.txt"'
+    )
+    return response
 
 
 def handle_add_remove(request, recipe, model, error_exists, error_not_found):
