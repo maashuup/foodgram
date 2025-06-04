@@ -133,9 +133,7 @@ class UserViewSet(DjoserUserViewSet):
             )
         elif request.method == 'DELETE':
             if user.avatar:
-                user.avatar.delete(save=False)
-                user.avatar = None
-                user.save(update_fields=['avatar'])
+                user.avatar.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -181,12 +179,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Recipe.objects.all()
-        user = self.request.user
-
-        is_favorited = self.request.query_params.get('is_favorited')
-        if is_favorited in ('1', 'true') and user.is_authenticated:
-            queryset = queryset.filter(favorite_recipes__user=user)
+        queryset = Recipe.objects.all().select_related(
+            'author'
+        ).prefetch_related(
+            'tags', 'ingredient_amounts__ingredient'
+        )
 
         return queryset
 
