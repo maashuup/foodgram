@@ -226,8 +226,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         max_length=None,
         use_url=True
     )
-    is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
+    is_favorited = serializers.BooleanField()
+    is_in_shopping_cart = serializers.BooleanField()
 
     class Meta:
         model = Recipe

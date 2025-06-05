@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from django.db.models import Count
+from django.db.models import BooleanField, Count, Exists, OuterRef, Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -182,12 +182,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
+        user = self.request.user
         queryset = Recipe.objects.all().select_related(
             'author'
         ).prefetch_related(
             'tags', 'ingredient_amounts__ingredient'
         )
-
+        if user.is_authenticated:
+            queryset = queryset.annotate(
+                is_favorited=Exists(
+                    user.favorite_recipes.filter(recipe=OuterRef('pk'))
+                ),
+                is_in_shopping_cart=Exists(
+                    user.shopping_cart.filter(recipe=OuterRef('pk'))
+                )
+            )
+        else:
+            queryset = queryset.annotate(
+                is_favorited=Value(False, output_field=BooleanField()),
+                is_in_shopping_cart=Value(False, output_field=BooleanField())
+            )
         return queryset
 
     @action(
