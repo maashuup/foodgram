@@ -10,7 +10,6 @@ from recipes.api.fields import Base64ImageField
 from recipes.models import (Follow, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 
-
 User = get_user_model()
 
 
