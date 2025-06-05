@@ -7,9 +7,10 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from recipes.models import (Follow, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingCart, Tag)
+                            ShoppingCart, Tag
+)
+from recipes.api.fields import Base64ImageField
 
-from .fields import Base64ImageField
 
 User = get_user_model()
 
@@ -96,7 +97,7 @@ class FollowSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Follow
@@ -134,7 +135,7 @@ class FollowSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if user.avatar:
             if request:
-                return request.build_absolute_uri(user.avatar.url)
+                return request.build_absolute_uri(requ.avatar.url)
             return user.avatar.url
         return None
 
@@ -147,10 +148,9 @@ class FollowSerializer(serializers.ModelSerializer):
         if request:
             limit_val = request.query_params.get('recipes_limit')
             if limit_val is not None:
-                try:
+                recipes_limit = None
+                if isinstance(limit_val, str) and limit_val.isdigit():
                     recipes_limit = int(limit_val)
-                except ValueError:
-                    recipes_limit = None
 
         recipes_qs = obj.following.recipes.all()
         if recipes_limit is not None:
@@ -300,11 +300,16 @@ class RecipeSerializer(serializers.ModelSerializer):
                     "ingredients": "Ингредиенты должны быть уникальны."
                 })
             seen_ids.add(ingr_id)
-            try:
+            if isinstance(amount, str) and amount.isdigit():
                 amount = int(amount)
-                if amount < 1:
-                    raise ValueError
-            except (ValueError, TypeError):
+
+            if not isinstance(amount, int):
+                raise serializers.ValidationError({
+                    "ingredients":
+                    "Количество ингредиента должно быть числом."
+                })
+
+            if amount < 1:
                 raise serializers.ValidationError({
                     "ingredients":
                     "Количество ингредиента должно быть не менее 1."
