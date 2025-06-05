@@ -6,10 +6,9 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from recipes.models import (Follow, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingCart, Tag
-)
 from recipes.api.fields import Base64ImageField
+from recipes.models import (Follow, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
 
 
 User = get_user_model()
@@ -135,7 +134,7 @@ class FollowSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if user.avatar:
             if request:
-                return request.build_absolute_uri(requ.avatar.url)
+                return request.build_absolute_uri(user.avatar.url)
             return user.avatar.url
         return None
 
