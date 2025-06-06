@@ -1,7 +1,7 @@
 import re
 
 from django.contrib.auth import get_user_model
-# from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -333,30 +333,62 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def add_ingredients(self, recipe, ingredients_data):
-        """Добавляет ингредиенты к рецепту."""
-        RecipeIngredient.objects.bulk_create([
-            RecipeIngredient(
-                recipe=recipe,
-                ingredient_id=ingredient['id'],
-                amount=ingredient['amount']
-            )
-            for ingredient in ingredients_data
-        ])
+    # def add_ingredients(self, recipe, ingredients_data):
+    #     """Добавляет ингредиенты к рецепту."""
+    #     RecipeIngredient.objects.bulk_create([
+    #         RecipeIngredient(
+    #             recipe=recipe,
+    #             ingredient_id=ingredient['id'],
+    #             amount=ingredient['amount']
+    #         )
+    #         for ingredient in ingredients_data
+    #     ])
 
+    # def create(self, validated_data):
+    #     tags_data = validated_data.pop('tags', [])
+    #     ingredients_data = validated_data.pop('ingredient_amounts', [])
+    #     recipe = Recipe.objects.create(**validated_data)
+    #     recipe.tags.set(tags_data)
+    #     self.add_ingredients(recipe, ingredients_data)
+    #     return recipe
+
+    # def update(self, instance, validated_data):
+    #     tags_data = validated_data.pop('tags', [])
+    #     ingredients_data = validated_data.pop('ingredient_amounts', [])
+    #     instance = super().update(instance, validated_data)
+    #     instance.tags.set(tags_data)
+    #     instance.ingredients.clear()
+    #     self.add_ingredients(instance, ingredients_data)
+    #     return instance
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
         ingredients_data = validated_data.pop('ingredient_amounts', [])
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags_data)
-        self.add_ingredients(recipe, ingredients_data)
+        for ingredient_data in ingredients_data:
+            ingredient = get_object_or_404(
+                Ingredient, id=ingredient_data['id']
+            )
+            RecipeIngredient.objects.create(
+                recipe=recipe,
+                ingredient=ingredient,
+                amount=ingredient_data['amount']
+            )
         return recipe
 
     def update(self, instance, validated_data):
-        tags_data = validated_data.pop('tags', [])
-        ingredients_data = validated_data.pop('ingredient_amounts', [])
-        instance = super().update(instance, validated_data)
-        instance.tags.set(tags_data)
-        instance.ingredients.clear()
-        self.add_ingredients(instance, ingredients_data)
-        return instance
+        if 'ingredient_amounts' in validated_data:
+            ingredients_data = validated_data.pop('ingredient_amounts', [])
+            instance.ingredient_amounts.all().delete()
+            for ingredient_data in ingredients_data:
+                ingredient = get_object_or_404(
+                    Ingredient, id=ingredient_data['id']
+                )
+                RecipeIngredient.objects.create(
+                    recipe=instance,
+                    ingredient=ingredient,
+                    amount=ingredient_data['amount']
+                )
+        if 'tags' in validated_data:
+            instance.tags.set(validated_data.pop('tags', []))
+        return super().update(instance, validated_data)
