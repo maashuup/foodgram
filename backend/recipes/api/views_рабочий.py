@@ -1,6 +1,7 @@
 from collections import defaultdict
 
-from django.db.models import BooleanField, Count, Exists, OuterRef, Value
+# from django.db.models import BooleanField, Count, Exists, OuterRef, Value
+from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -22,11 +23,17 @@ from .serializers import (AvatarSerializer, FollowSerializer,
                           TagSerializer, UserSerializer, UserSerializerForMe)
 
 
+class PageLimitPagination(PageNumberPagination):
+    """Пагинация с лимитом количества объектов на странице."""
+    page_size = 6
+    page_size_query_param = 'limit'
+
+
 class UserViewSet(DjoserUserViewSet):
     """Вьюсет для управления пользователями."""
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = PageLimitPagination
 
     def get_serializer_class(self):
         """Для эндпоинта /me используется другой сериализатор."""
@@ -156,7 +163,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Управление рецептами (создание, получение, редактирование, удаление)."""
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
-    pagination_class = PageNumberPagination
+    pagination_class = PageLimitPagination
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -175,28 +182,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
         return super().destroy(request, *args, **kwargs)
 
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     queryset = Recipe.objects.all().select_related(
+    #         'author'
+    #     ).prefetch_related(
+    #         'tags', 'ingredient_amounts__ingredient'
+    #     )
+    #     if user.is_authenticated:
+    #         queryset = queryset.annotate(
+    #             is_favorited=Exists(
+    #                 user.favorite_recipes.filter(recipe=OuterRef('pk'))
+    #             ),
+    #             is_in_shopping_cart=Exists(
+    #                 user.shopping_cart.filter(recipe=OuterRef('pk'))
+    #             )
+    #         )
+    #     else:
+    #         queryset = queryset.annotate(
+    #             is_favorited=Value(False, output_field=BooleanField()),
+    #             is_in_shopping_cart=Value(False, output_field=BooleanField())
+    #         )
+    #     return queryset
     def get_queryset(self):
-        user = self.request.user
-        queryset = Recipe.objects.all().select_related(
-            'author'
-        ).prefetch_related(
-            'tags', 'ingredient_amounts__ingredient'
-        )
-        if user.is_authenticated:
-            queryset = queryset.annotate(
-                is_favorited=Exists(
-                    user.favorite_recipes.filter(recipe=OuterRef('pk'))
-                ),
-                is_in_shopping_cart=Exists(
-                    user.shopping_cart.filter(recipe=OuterRef('pk'))
-                )
-            )
-        else:
-            queryset = queryset.annotate(
-                is_favorited=Value(False, output_field=BooleanField()),
-                is_in_shopping_cart=Value(False, output_field=BooleanField())
-            )
-        return queryset
+        return Recipe.objects.all()
 
     @action(
         detail=True,
