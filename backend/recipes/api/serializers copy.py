@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -95,6 +96,7 @@ class FollowSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
+    # recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Follow
@@ -227,6 +229,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     )
     is_favorited = serializers.BooleanField()
     is_in_shopping_cart = serializers.BooleanField()
+    # is_favorited = serializers.SerializerMethodField()
+    # is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -323,6 +327,62 @@ class RecipeSerializer(serializers.ModelSerializer):
                 "Необходимо указать описание рецепта."
             )
         return value
+    # def validate(self, attrs):
+    #     """Валидация данных рецепта."""
+    #     request = self.context.get("request")
+    #     if self.instance and self.instance.author != request.user:
+    #         raise PermissionDenied("Вы не можете редактировать чужой рецепт.")
+
+    #     ingredients = self.initial_data.get("ingredients", [])
+    #     if not ingredients:
+    #         raise serializers.ValidationError({
+    #             "ingredients": "Необходимо добавить хотя бы один ингредиент."
+    #         })
+
+    #     tags = self.initial_data.get("tags")
+    #     if not tags or len(tags) == 0:
+    #         raise serializers.ValidationError({
+    #             "tags": "Необходимо указать хотя бы один тег."
+    #         })
+
+    #     if len(tags) != len(set(tags)):
+    #         raise serializers.ValidationError({
+    #             "tags": "Теги должны быть уникальны."
+    #         })
+
+    #     seen_ids = set()
+    #     for item in ingredients:
+    #         ingr_id = item.get('id')
+    #         amount = item.get('amount')
+    #         if ingr_id in seen_ids:
+    #             raise serializers.ValidationError({
+    #                 "ingredients": "Ингредиенты должны быть уникальны."
+    #             })
+    #         seen_ids.add(ingr_id)
+    #         # if not isinstance(amount, int) or amount < 1:
+    #         #     raise serializers.ValidationError({
+    #         #         "ingredients": (
+    #         #             "Количество ингредиента должно быть не менее 1."
+    #         #         )
+    #         #     })
+    #         try:
+    #             amount = int(amount)
+    #             if amount < 1:
+    #                 raise ValueError
+    #         except (ValueError, TypeError):
+    #             raise serializers.ValidationError({
+    #                 "ingredients":
+    #                 "Количество ингредиента должно быть не менее 1."
+    #             })
+
+    #         if (
+    #             not self.initial_data.get("text")
+    #             or str(self.initial_data.get("text")).strip() == ""
+    #         ):
+    #             raise serializers.ValidationError({
+    #                 "text": "Необходимо указать описание рецепта."
+    #             })
+    #     return attrs
 
     def validate_cooking_time(self, value):
         """Валидация времени приготовления."""
@@ -359,3 +419,37 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.ingredients.clear()
         self.add_ingredients(instance, ingredients_data)
         return instance
+
+    # def create(self, validated_data):
+    #     tags_data = validated_data.pop('tags', [])
+    #     ingredients_data = validated_data.pop('ingredient_amounts', [])
+    #     ingredients_data = validated_data.pop('ingredient_amounts', [])
+    #     recipe = Recipe.objects.create(**validated_data)
+    #     recipe.tags.set(tags_data)
+    #     for ingredient_data in ingredients_data:
+    #         ingredient = get_object_or_404(
+    #             Ingredient, id=ingredient_data['id']
+    #         )
+    #         RecipeIngredient.objects.create(
+    #             recipe=recipe,
+    #             ingredient=ingredient,
+    #             amount=ingredient_data['amount']
+    #         )
+    #     return recipe
+
+    # def update(self, instance, validated_data):
+    #     if 'ingredient_amounts' in validated_data:
+    #         ingredients_data = validated_data.pop('ingredient_amounts', [])
+    #         instance.ingredient_amounts.all().delete()
+    #         for ingredient_data in ingredients_data:
+    #             ingredient = get_object_or_404(
+    #                 Ingredient, id=ingredient_data['id']
+    #             )
+    #             RecipeIngredient.objects.create(
+    #                 recipe=instance,
+    #                 ingredient=ingredient,
+    #                 amount=ingredient_data['amount']
+    #             )
+    #     if 'tags' in validated_data:
+    #         instance.tags.set(validated_data.pop('tags', []))
+    #     return super().update(instance, validated_data)
