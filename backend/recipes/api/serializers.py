@@ -280,13 +280,16 @@ class RecipeSerializer(serializers.ModelSerializer):
                 "Необходимо добавить хотя бы один ингредиент."
             )
 
-        ingredient_ids = [item.get('id') for item in value]
-        if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise serializers.ValidationError(
-                "Ингредиенты должны быть уникальны."
-            )
+        seen_ids = set()
         for item in value:
+            ingr_id = item.get("id")
             amount = item.get("amount")
+
+            if ingr_id in seen_ids:
+                raise serializers.ValidationError(
+                    "Ингредиенты должны быть уникальны."
+                )
+            seen_ids.add(ingr_id)
 
             if isinstance(amount, str) and amount.isdigit():
                 amount = int(amount)
@@ -305,7 +308,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def validate_tags(self, value):
         """Валидация тегов."""
-        if not value:
+        if not value or len(value) == 0:
             raise serializers.ValidationError(
                 "Необходимо указать хотя бы один тег."
             )
