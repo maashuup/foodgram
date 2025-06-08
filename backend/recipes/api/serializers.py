@@ -52,8 +52,8 @@ class CreateUserSerializer(UserSerializer):
         pattern = r'^[\w.@+-]+\Z'
         if not re.match(pattern, value):
             raise serializers.ValidationError(
-                "Недопустимые символы в username."
-                "Разрешены только буквы, цифры и @/./+/-/_"
+                'Недопустимые символы в username.'
+                'Разрешены только буквы, цифры и @/./+/-/_'
             )
         return value
 
@@ -156,16 +156,16 @@ class FollowSerializer(serializers.ModelSerializer):
         result = []
         for recipe in recipes_qs:
             result.append({
-                "id": recipe.id,
-                "name": recipe.name,
-                "image": (
+                'id': recipe.id,
+                'name': recipe.name,
+                'image': (
                     request.build_absolute_uri(recipe.image.url)
                     if request and recipe.image
                     else recipe.image.url if recipe.image
                     else None
                 ),
 
-                "cooking_time": recipe.cooking_time
+                'cooking_time': recipe.cooking_time
             })
         return result
 
@@ -213,7 +213,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(
         many=True,
-        source="ingredient_amounts"
+        source='ingredient_amounts'
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
@@ -249,7 +249,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         """Проверка, добавлен ли рецепт в избранное."""
-        request = self.context.get("request")
+        request = self.context.get('request')
         return (
             request.user.is_authenticated
             and obj.favorite_recipes.filter(user=request.user).exists()
@@ -257,7 +257,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         """Проверка, добавлен ли рецепт в список покупок."""
-        request = self.context.get("request")
+        request = self.context.get('request')
         return (
             request.user.is_authenticated
             and ShoppingCart.objects.filter(
@@ -267,10 +267,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """Валидация данных рецепта."""
-        request = self.context.get("request")
+        request = self.context.get('request')
         if self.instance and self.instance.author != request.user:
             raise PermissionDenied(
-                "Вы не можете редактировать чужой рецепт."
+                'Вы не можете редактировать чужой рецепт.'
             )
         return attrs
 
@@ -278,13 +278,13 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Валидация ингредиентов."""
         if not value:
             raise serializers.ValidationError(
-                "Необходимо добавить хотя бы один ингредиент."
+                'Необходимо добавить хотя бы один ингредиент.'
             )
 
         ingredient_ids = [item.get('id') for item in value]
         if len(ingredient_ids) != len(set(ingredient_ids)):
             raise serializers.ValidationError(
-                "Ингредиенты должны быть уникальны."
+                'Ингредиенты должны быть уникальны.'
             )
         for item in value:
             amount = item.get("amount")
@@ -294,12 +294,12 @@ class RecipeSerializer(serializers.ModelSerializer):
 
             if not isinstance(amount, int):
                 raise serializers.ValidationError(
-                    "Количество ингредиента должно быть числом."
+                    'Количество ингредиента должно быть числом.'
                 )
 
             if amount < 1:
                 raise serializers.ValidationError(
-                    "Количество ингредиента должно быть не менее 1."
+                    'Количество ингредиента должно быть не менее 1.'
                 )
 
         return value
@@ -308,11 +308,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Валидация тегов."""
         if not value:
             raise serializers.ValidationError(
-                "Необходимо указать хотя бы один тег."
+                'Необходимо указать хотя бы один тег.'
             )
         if len(value) != len(set(value)):
             raise serializers.ValidationError(
-                "Теги должны быть уникальны."
+                'Теги должны быть уникальны.'
             )
         return value
 
@@ -320,7 +320,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Валидация текста рецепта."""
         if not value or str(value).strip() == "":
             raise serializers.ValidationError(
-                "Необходимо указать описание рецепта."
+                'Необходимо указать описание рецепта.'
             )
         return value
 
@@ -328,7 +328,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Валидация времени приготовления."""
         if value < 1:
             raise serializers.ValidationError(
-                "Время приготовления должно быть не меньше 1 минуты."
+                'Время приготовления должно быть не меньше 1 минуты.'
             )
         return value
 

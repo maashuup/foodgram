@@ -30,7 +30,7 @@ class UserViewSet(DjoserUserViewSet):
 
     def get_serializer_class(self):
         """Для эндпоинта /me используется другой сериализатор."""
-        if self.action == "me":
+        if self.action == 'me':
             return UserSerializerForMe
         return super().get_serializer_class()
 
@@ -116,7 +116,7 @@ class UserViewSet(DjoserUserViewSet):
         if request.method == 'PUT':
             if 'avatar' not in request.data:
                 return Response(
-                    {"avatar": ["Обязательное поле."]},
+                    {'avatar': ['Обязательное поле.']},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             serializer = AvatarSerializer(
@@ -283,7 +283,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         relative_url = reverse('recipe-detail', kwargs={'pk': recipe.pk})
         absolute_url = request.build_absolute_uri(relative_url)
         return Response(
-            {"short-link": absolute_url},
+            {'short-link': absolute_url},
             status=status.HTTP_200_OK
         )
 
@@ -298,7 +298,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         одинаковых ингредиентов."""
         user = request.user
 
-        # Получаем все ингредиенты через промежуточную модель
         ingredients_qs = RecipeIngredient.objects.filter(
             recipe__shopping_cart__user=user
         ).select_related('ingredient')
