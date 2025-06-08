@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
 from .constants import EMAIL_MAX_LENGTH, NAME_MAX_LENGTH, USERNAME_MAX_LENGTH
@@ -106,7 +106,7 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         upload_to='recipes/images/',
-        null=True,
+        blank=True,
         default=None,
         verbose_name='Картинка, закодированная в Base64',
     )
@@ -118,7 +118,8 @@ class Recipe(models.Model):
         verbose_name='Описание',
         default=''
     )
-    cooking_time = models.PositiveIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)],
         verbose_name='Время приготовления',
     )
     created = models.DateTimeField(
@@ -148,7 +149,10 @@ class RecipeIngredient(models.Model):
         related_name='recipe_usages',
         verbose_name='Ингредиент',
     )
-    amount = models.PositiveIntegerField()
+    amount = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)],
+        verbose_name='Количество',
+    )
 
     class Meta:
         verbose_name = 'Ингредиент для рецепта'
@@ -158,20 +162,21 @@ class RecipeIngredient(models.Model):
         return f'{self.ingredient} ({self.amount}) для {self.recipe}'
 
 
-class Favorite(models.Model):
+class UserRecipeRelation(models.Model):
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
-        related_name='favorites',
-        verbose_name='Пользователь',
+        on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE,
-        related_name='favorite_recipes',
-        verbose_name='Рецепт',
+        on_delete=models.CASCADE
     )
 
+    class Meta:
+        abstract = True
+
+
+class Favorite(UserRecipeRelation):
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -185,20 +190,7 @@ class Favorite(models.Model):
         return f'{self.user} likes {self.recipe}'
 
 
-class ShoppingCart(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='shopping_cart',
-        verbose_name='Пользователь',
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='shopping_cart',
-        verbose_name='Рецепт',
-    )
-
+class ShoppingCart(UserRecipeRelation):
     class Meta:
         constraints = [
             models.UniqueConstraint(
