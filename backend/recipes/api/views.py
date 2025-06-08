@@ -250,7 +250,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorites(self, request):
         """Список рецептов, добавленных в избранное текущим пользователем."""
         recipes = Recipe.objects.filter(favorite_recipes__user=request.user)
-        serializer = self.get_serializer(
+        serializer = RecipeSerializer(
             recipes, many=True, context={'request': request}
         )
         return Response(serializer.data)
