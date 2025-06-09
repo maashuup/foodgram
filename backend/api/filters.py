@@ -14,7 +14,7 @@ class IngredientFilter(FilterSet):
 
     class Meta:
         model = Ingredient
-        fields = ['name']
+        fields = ('name')
 
 
 class RecipeFilter(FilterSet):
@@ -24,6 +24,10 @@ class RecipeFilter(FilterSet):
     is_in_shopping_cart = django_filters.BooleanFilter(
         method='filter_is_in_shopping_cart'
     )
+
+    class Meta:
+        model = Recipe
+        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
 
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
@@ -44,7 +48,3 @@ class RecipeFilter(FilterSet):
             if value
             else queryset.exclude(shopping_cart__user=user)
         )
-
-    class Meta:
-        model = Recipe
-        fields = ['author', 'tags', 'is_favorited', 'is_in_shopping_cart']

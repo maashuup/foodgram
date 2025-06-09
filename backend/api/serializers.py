@@ -142,12 +142,10 @@ class FollowSerializer(serializers.ModelSerializer):
         if not request:
             return []
         recipes_limit = None
-        if request:
-            limit_val = request.query_params.get('recipes_limit')
-            if limit_val is not None:
-                recipes_limit = None
-                if isinstance(limit_val, str) and limit_val.isdigit():
-                    recipes_limit = int(limit_val)
+        limit_val = request.query_params.get('recipes_limit')
+        if limit_val is not None:
+            if isinstance(limit_val, str) and limit_val.isdigit():
+                recipes_limit = int(limit_val)
 
         recipes_qs = obj.following.recipes.all()
         if recipes_limit is not None:
