@@ -142,10 +142,11 @@ class FollowSerializer(serializers.ModelSerializer):
         if not request:
             return []
         recipes_limit = None
-        limit_val = request.query_params.get('recipes_limit')
-        if limit_val is not None:
-            if isinstance(limit_val, str) and limit_val.isdigit():
-                recipes_limit = int(limit_val)
+        limit_value = request.query_params.get('recipes_limit')
+        if limit_value is not None:
+            recipes_limit = None
+            if isinstance(limit_value, str) and limit_value.isdigit():
+                recipes_limit = int(limit_value)
 
         recipes_qs = obj.following.recipes.all()
         if recipes_limit is not None:
@@ -166,10 +167,6 @@ class FollowSerializer(serializers.ModelSerializer):
                 'cooking_time': recipe.cooking_time
             })
         return result
-
-    def get_recipes_count(self, obj):
-        """Получение количества рецептов автора."""
-        return obj.following.recipes.count()
 
 
 class AvatarSerializer(serializers.ModelSerializer):

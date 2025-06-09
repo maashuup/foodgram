@@ -24,6 +24,7 @@ from .serializers import (AvatarSerializer, FollowSerializer,
 
 class UserViewSet(DjoserUserViewSet):
     """Вьюсет для управления пользователями."""
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
@@ -202,29 +203,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().destroy(request, *args, **kwargs)
-
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     queryset = Recipe.objects.all().select_related(
-    #         'author'
-    #     ).prefetch_related(
-    #         'tags', 'ingredient_amounts__ingredient'
-    #     )
-    #     if user.is_authenticated:
-    #         queryset = queryset.annotate(
-    #             is_favorited=Exists(
-    #                 user.favorite_recipes.filter(recipe=OuterRef('pk'))
-    #             ),
-    #             is_in_shopping_cart=Exists(
-    #                 user.shopping_cart.filter(recipe=OuterRef('pk'))
-    #             )
-    #         )
-    #     else:
-    #         queryset = queryset.annotate(
-    #             is_favorited=Value(False, output_field=BooleanField()),
-    #             is_in_shopping_cart=Value(False, output_field=BooleanField())
-    #         )
-    #     return queryset
 
     @action(
         detail=True,
