@@ -5,7 +5,7 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from fields import Base64ImageField
+from api.fields import Base64ImageField
 from recipes.models import (Follow, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 
@@ -239,7 +239,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Добавление тегов и картинки к рецепту."""
         data = super().to_representation(instance)
         data['tags'] = TagSerializer(instance.tags.all(), many=True).data
-        request = self.context.get("request")
+        request = self.context.get('request')
         data['image'] = (
             request.build_absolute_uri(instance.image.url)
             if instance.image
@@ -287,7 +287,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 'Ингредиенты должны быть уникальны.'
             )
         for item in value:
-            amount = item.get("amount")
+            amount = item.get('amount')
 
             if isinstance(amount, str) and amount.isdigit():
                 amount = int(amount)
@@ -318,7 +318,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def validate_text(self, value):
         """Валидация текста рецепта."""
-        if not value or str(value).strip() == "":
+        if not value or str(value).strip() == '':
             raise serializers.ValidationError(
                 'Необходимо указать описание рецепта.'
             )
