@@ -166,7 +166,7 @@ jobs:
             sudo docker compose -f docker-compose.production.yml down
             echo "Запуск новых контейнеров..."
             sudo docker compose -f docker-compose.production.yml up -d
-            sudo docker compose -f docker-compose.production.yml exec backend
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate --noinput
             echo "Перезапускается Nginx..."
             sudo docker compose -f docker-compose.production.yml restart nginx
 
