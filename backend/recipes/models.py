@@ -191,6 +191,12 @@ class Favorite(UserRecipeRelation):
 
 
 class ShoppingCart(UserRecipeRelation):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='shopping_cart'
+    )
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
