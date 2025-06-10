@@ -32,7 +32,6 @@ class User(AbstractUser):
     )
     avatar = models.ImageField(
         upload_to='users/',
-        null=True,
         blank=True,
         verbose_name='Аватар',
     )
