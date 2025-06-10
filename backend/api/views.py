@@ -1,6 +1,4 @@
-from collections import defaultdict
-
-from django.db.models import BooleanField, Count, Exists, OuterRef, Value
+from django.db.models import BooleanField, Count, Exists, OuterRef, Sum, Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -270,44 +268,41 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """Выгрузка списка покупок в файл с указанием рецептов и суммированием
         одинаковых ингредиентов."""
-        user = request.user
+        recipes = Recipe.objects.filter(shopping_cart__user=request.user)
+        ingredients = RecipeIngredient.objects.filter(
+            recipe__in=recipes
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit'
+        ).annotate(
+            total_amount=Sum('amount')
+        ).order_by('ingredient__name')
 
-        ingredients_qs = RecipeIngredient.objects.filter(
-            recipe__shopping_cart__user=user
-        ).select_related('ingredient')
+        totals = {
+            item['ingredient__name']: {
+                'amount': item['total_amount'],
+                'unit': item['ingredient__measurement_unit']
+            } for item in ingredients
+        }
 
-        totals = defaultdict(lambda: {'amount': 0, 'unit': ''})
-        recipes_used = set()
-
-        for ri in ingredients_qs:
-            name = ri.ingredient.name
-            totals[name]['amount'] += ri.amount
-            totals[name]['unit'] = ri.ingredient.measurement_unit
-            recipes_used.add(ri.recipe.name)
+        recipes_used = recipes.values_list('name', flat=True).distinct()
 
         return render_ingredients_txt(totals, recipes_used)
-        # ingredients = (
-        #     RecipeIngredient.objects
-        #     .filter(recipe__shopping_cart__user=request.user)
-        #     .values('ingredient__name', 'ingredient__measurement_unit')
-        #     .annotate(total_amount=Sum('amount'))
-        #     .order_by('ingredient__name')
-        # )
 
-        # recipes_used = (
-        #     Recipe.objects
-        #     .filter(shopping_cart__user=request.user)
-        #     .values_list('name', flat=True)
-        #     .distinct()
-        # )
+        #         user = request.user
 
-        # totals = {
-        #     item['ingredient__name']: {
-        #         'amount': item['total_amount'],
-        #         'unit': item['ingredient__measurement_unit'],
-        #     }
-        #     for item in ingredients
-        # }
+        # ingredients_qs = RecipeIngredient.objects.filter(
+        #     recipe__shopping_cart__user=user
+        # ).select_related('ingredient')
+
+        # totals = defaultdict(lambda: {'amount': 0, 'unit': ''})
+        # recipes_used = set()
+
+        # for ri in ingredients_qs:
+        #     name = ri.ingredient.name
+        #     totals[name]['amount'] += ri.amount
+        #     totals[name]['unit'] = ri.ingredient.measurement_unit
+        #     recipes_used.add(ri.recipe.name)
 
         # return render_ingredients_txt(totals, recipes_used)
 

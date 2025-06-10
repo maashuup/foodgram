@@ -165,7 +165,7 @@ class RecipeIngredient(models.Model):
 class UserRecipeRelation(models.Model):
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     recipe = models.ForeignKey(
         Recipe,
