@@ -6,7 +6,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from api.fields import Base64ImageField
-from recipes.models import Follow, Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import (Favorite, Follow, Ingredient, Recipe,
+                            RecipeIngredient, ShoppingCart, Tag)
 
 User = get_user_model()
 
@@ -62,7 +63,6 @@ class UserSerializerForMe(UserSerializer):
 
     is_subscribed = serializers.SerializerMethodField()
     avatar = serializers.ImageField(read_only=True)
-    # avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -336,3 +336,31 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.ingredients.clear()
         self.add_ingredients(instance, ingredients_data)
         return instance
+
+
+class FavoriteCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления рецепта в избранное."""
+
+    class Meta:
+        model = Favorite
+        fields = ('recipe',)
+
+    def create(self, validated_data):
+        return Favorite.objects.create(
+            user=self.context['request'].user,
+            **validated_data
+        )
+
+
+class ShoppingCartCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления рецепта в список покупок."""
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('recipe',)
+
+    def create(self, validated_data):
+        return ShoppingCart.objects.create(
+            user=self.context['request'].user,
+            **validated_data
+        )

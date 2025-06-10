@@ -15,8 +15,9 @@ from recipes.models import (Favorite, Follow, Ingredient, Recipe,
                             RecipeIngredient, ShoppingCart, Tag, User)
 
 from .filters import IngredientFilter, RecipeFilter
-from .serializers import (AvatarSerializer, FollowSerializer,
-                          IngredientSerializer, RecipeSerializer,
+from .serializers import (AvatarSerializer, FavoriteSerializer,
+                          FollowSerializer, IngredientSerializer,
+                          RecipeSerializer, ShoppingCartSerializer,
                           TagSerializer, UserSerializer, UserSerializerForMe)
 
 
@@ -210,6 +211,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             request,
             recipe,
             model=Favorite,
+            serializer_class=FavoriteSerializer,
             error_exists='Рецепт уже в избранном',
             error_not_found='Рецепт не найден в избранном'
         )
@@ -239,6 +241,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             request,
             recipe,
             model=ShoppingCart,
+            serializer_class=ShoppingCartSerializer,
             error_exists='Рецепт уже в списке покупок',
             error_not_found='Рецепт не найден в списке покупок'
         )
@@ -295,21 +298,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
 
-# def render_ingredients_txt(ingredients_totals, recipes_used):
-#     lines = ['Список покупок:']
-#     lines.append('\nИспользуемые рецепты:')
-#     for name in sorted(recipes_used):
-#         lines.append(f'– {name}')
-#     lines.append('\nИнгредиенты:')
-#     for name, data in ingredients_totals.items():
-#         lines.append(f'– {name}: {data["amount"]} {data["unit"]}')
-
-#     content = '\n'.join(lines)
-#     response = HttpResponse(content, content_type='text/plain')
-#     response['Content-Disposition'] = (
-#         'attachment; filename="shopping_list.txt"'
-#     )
-#     return response
 def render_ingredients_txt(ingredients_totals, recipes_used):
     lines = ['Список покупок:']
     lines.append('\nИспользуемые рецепты:')
@@ -321,15 +309,17 @@ def render_ingredients_txt(ingredients_totals, recipes_used):
     return '\n'.join(lines)
 
 
-def handle_add_remove(request, recipe, model, error_exists, error_not_found):
+def handle_add_remove(
+    request, recipe, model, serializer_class, error_exists, error_not_found
+):
     if request.method == 'POST':
-        obj, created = model.objects.get_or_create(
-            user=request.user, recipe=recipe
+        serializer = serializer_class(
+            data={'recipe': recipe.id},
+            context={'request': request}
         )
-        if not created:
-            return Response(
-                {'error': error_exists}, status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
         data = {
             'id': recipe.id,
             'name': recipe.name,
