@@ -61,8 +61,8 @@ class UserSerializerForMe(UserSerializer):
     """Сериализатор для текущего пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
-    # avatar = serializers.ImageField(read_only=True)
-    avatar = serializers.SerializerMethodField()
+    avatar = serializers.ImageField(read_only=True)
+    # avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -73,10 +73,6 @@ class UserSerializerForMe(UserSerializer):
 
     def get_is_subscribed(self, obj):
         return False
-
-    def get_avatar(self, obj):
-        """Получение URL аватара пользователя."""
-        return obj.avatar.url if obj.avatar else None
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -146,12 +142,11 @@ class FollowSerializer(serializers.ModelSerializer):
         if not request:
             return []
         recipes_limit = None
-        if request:
-            limit_value = request.query_params.get('recipes_limit')
-            if limit_value is not None:
-                recipes_limit = None
-                if isinstance(limit_value, str) and limit_value.isdigit():
-                    recipes_limit = int(limit_value)
+        limit_value = request.query_params.get('recipes_limit')
+        if limit_value is not None:
+            recipes_limit = None
+            if isinstance(limit_value, str) and limit_value.isdigit():
+                recipes_limit = int(limit_value)
 
         recipes_qs = obj.following.recipes.all()
         if recipes_limit is not None:
@@ -246,24 +241,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             else None
         )
         return data
-
-    # def get_is_favorited(self, obj):
-    #     """Проверка, добавлен ли рецепт в избранное."""
-    #     request = self.context.get('request')
-    #     return (
-    #         request.user.is_authenticated
-    #         and obj.favorite_recipes.filter(user=request.user).exists()
-    #     )
-
-    # def get_is_in_shopping_cart(self, obj):
-    #     """Проверка, добавлен ли рецепт в список покупок."""
-    #     request = self.context.get('request')
-    #     return (
-    #         request.user.is_authenticated
-    #         and ShoppingCart.objects.filter(
-    #             user=request.user, recipe=obj
-    #         ).exists()
-    #     )
 
     def validate(self, attrs):
         """Валидация данных рецепта."""
