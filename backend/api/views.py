@@ -79,11 +79,7 @@ class UserViewSet(DjoserUserViewSet):
                 context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-            follow_obj = Follow.objects.get(
-                user=request.user, following=user_to_follow
-            )
+            follow_obj = serializer.save()
             return Response(
                 FollowSerializer(
                     follow_obj,
