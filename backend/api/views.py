@@ -286,27 +286,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
         }
 
         recipes_used = recipes.values_list('name', flat=True).distinct()
+        content = render_ingredients_txt(totals, recipes_used)
 
-        return render_ingredients_txt(totals, recipes_used)
-
-        #         user = request.user
-
-        # ingredients_qs = RecipeIngredient.objects.filter(
-        #     recipe__shopping_cart__user=user
-        # ).select_related('ingredient')
-
-        # totals = defaultdict(lambda: {'amount': 0, 'unit': ''})
-        # recipes_used = set()
-
-        # for ri in ingredients_qs:
-        #     name = ri.ingredient.name
-        #     totals[name]['amount'] += ri.amount
-        #     totals[name]['unit'] = ri.ingredient.measurement_unit
-        #     recipes_used.add(ri.recipe.name)
-
-        # return render_ingredients_txt(totals, recipes_used)
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_list.txt"'
+        )
+        return response
 
 
+# def render_ingredients_txt(ingredients_totals, recipes_used):
+#     lines = ['Список покупок:']
+#     lines.append('\nИспользуемые рецепты:')
+#     for name in sorted(recipes_used):
+#         lines.append(f'– {name}')
+#     lines.append('\nИнгредиенты:')
+#     for name, data in ingredients_totals.items():
+#         lines.append(f'– {name}: {data["amount"]} {data["unit"]}')
+
+#     content = '\n'.join(lines)
+#     response = HttpResponse(content, content_type='text/plain')
+#     response['Content-Disposition'] = (
+#         'attachment; filename="shopping_list.txt"'
+#     )
+#     return response
 def render_ingredients_txt(ingredients_totals, recipes_used):
     lines = ['Список покупок:']
     lines.append('\nИспользуемые рецепты:')
@@ -315,13 +318,7 @@ def render_ingredients_txt(ingredients_totals, recipes_used):
     lines.append('\nИнгредиенты:')
     for name, data in ingredients_totals.items():
         lines.append(f'– {name}: {data["amount"]} {data["unit"]}')
-
-    content = '\n'.join(lines)
-    response = HttpResponse(content, content_type='text/plain')
-    response['Content-Disposition'] = (
-        'attachment; filename="shopping_list.txt"'
-    )
-    return response
+    return '\n'.join(lines)
 
 
 def handle_add_remove(request, recipe, model, error_exists, error_not_found):
