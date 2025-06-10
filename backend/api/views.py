@@ -268,11 +268,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """Выгрузка списка покупок в файл с указанием рецептов и суммированием
         одинаковых ингредиентов."""
-        # user = request.user
+        user = request.user
 
-        # ingredients_qs = RecipeIngredient.objects.filter(
-        #     recipe__shopping_cart__user=user
-        # ).select_related('ingredient')
+        ingredients = RecipeIngredient.objects.filter(
+            recipe__shopping_cart__user=user
+        ).select_related('ingredient')
 
         # totals = defaultdict(lambda: {'amount': 0, 'unit': ''})
         # recipes_used = set()
@@ -284,13 +284,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         #     recipes_used.add(ri.recipe.name)
 
         # return render_ingredients_txt(totals, recipes_used)
-        ingredients = (
-            RecipeIngredient.objects
-            .filter(recipe__shopping_cart__user=request.user)
-            .values('ingredient__name', 'ingredient__measurement_unit')
-            .annotate(total_amount=Sum('amount'))
-            .order_by('ingredient__name')
-        )
+        # ingredients = (
+        #     RecipeIngredient.objects
+        #     .filter(recipe__shopping_cart__user=request.user)
+        #     .values('ingredient__name', 'ingredient__measurement_unit')
+        #     .annotate(total_amount=Sum('amount'))
+        #     .order_by('ingredient__name')
+        # )
 
         recipes_used = (
             Recipe.objects
