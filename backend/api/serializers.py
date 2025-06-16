@@ -95,6 +95,9 @@ class FollowSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
+    following = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), write_only=True
+    )
 
     class Meta:
         model = Follow
