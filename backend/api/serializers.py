@@ -118,6 +118,11 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def create(self, validated_data):
+        user = self.context['request'].user
+        following = validated_data['following']
+        return Follow.objects.create(user=user, following=following)
+
     def get_is_subscribed(self, obj):
         """Подписан ли пользователь на автора."""
         user = (self.context.get('request').user

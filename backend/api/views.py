@@ -27,7 +27,6 @@ class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
-    lookup_field = 'id'
 
     def get_serializer_class(self):
         """Для эндпоинта /me используется другой сериализатор."""
