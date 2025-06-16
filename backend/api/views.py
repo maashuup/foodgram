@@ -67,9 +67,9 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[IsAuthenticated],
         url_path='subscribe'
     )
-    def subscribe(self, request, pk=None):
+    def subscribe(self, request, id=None):
         """Подписка или отписка от пользователя."""
-        user_to_follow = get_object_or_404(User, pk=pk)
+        user_to_follow = get_object_or_404(User, pk=id)
 
         if request.method == 'POST':
             data = {'following': user_to_follow.id}
