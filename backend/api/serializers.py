@@ -139,8 +139,6 @@ class FollowSerializer(serializers.ModelSerializer):
     def get_recipes(self, obj):
         """Получение рецептов автора."""
         request = self.context.get('request')
-        if not request:
-            return []
         recipes_limit = None
         limit_value = request.query_params.get('recipes_limit')
         if limit_value is not None:
@@ -290,22 +288,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         if len(value) != len(set(value)):
             raise serializers.ValidationError(
                 'Теги должны быть уникальны.'
-            )
-        return value
-
-    def validate_text(self, value):
-        """Валидация текста рецепта."""
-        if not value or str(value).strip() == '':
-            raise serializers.ValidationError(
-                'Необходимо указать описание рецепта.'
-            )
-        return value
-
-    def validate_cooking_time(self, value):
-        """Валидация времени приготовления."""
-        if value < 1:
-            raise serializers.ValidationError(
-                'Время приготовления должно быть не меньше 1 минуты.'
             )
         return value
 

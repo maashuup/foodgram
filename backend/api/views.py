@@ -7,14 +7,14 @@ from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from recipes.models import (Favorite, Follow, Ingredient, Recipe,
                             RecipeIngredient, ShoppingCart, Tag, User)
 
 from .filters import IngredientFilter, RecipeFilter
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (AvatarSerializer, FavoriteSerializer,
                           FollowSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingCartSerializer,
@@ -155,7 +155,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthorOrReadOnly]
 
     def get_queryset(self):
         user = self.request.user
@@ -189,16 +189,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Создаёт рецепт, устанавливая текущего пользователя автором."""
         serializer.save(author=self.request.user)
 
-    def destroy(self, request, *args, **kwargs):
-        """Удаляет рецепт, если текущий пользователь является его автором."""
-        recipe = self.get_object()
-        if recipe.author != request.user:
-            return Response(
-                {'detail': 'Недостаточно прав.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        return super().destroy(request, *args, **kwargs)
-
     @action(
         detail=True,
         methods=['post', 'delete'],
@@ -223,7 +213,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorites(self, request):
         """Список рецептов, добавленных в избранное текущим пользователем."""
-        recipes = Recipe.objects.filter(favorite_recipes__user=request.user)
+        recipes = Recipe.objects.filter(favorites__user=request.user)
         serializer = RecipeSerializer(
             recipes, many=True, context={'request': request}
         )
@@ -271,7 +261,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """Выгрузка списка покупок в файл с указанием рецептов и суммированием
         одинаковых ингредиентов."""
-        recipes = Recipe.objects.filter(shopping_cart__user=request.user)
+        recipes = Recipe.objects.filter(shoppingcarts__user=request.user)
         ingredients = RecipeIngredient.objects.filter(
             recipe__in=recipes
         ).values(
