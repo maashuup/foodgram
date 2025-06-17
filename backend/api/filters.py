@@ -34,9 +34,9 @@ class RecipeFilter(FilterSet):
         if not user.is_authenticated:
             return queryset.none() if value else queryset
         return (
-            queryset.filter(favorited_by__user=user)
+            queryset.filter(favorites__user=user)
             if value
-            else queryset.exclude(favorited_by__user=user)
+            else queryset.exclude(favorites__user=user)
         )
     # def filter_is_favorited(self, queryset, name, value):
     #     if value:
