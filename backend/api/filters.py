@@ -34,9 +34,9 @@ class RecipeFilter(FilterSet):
         if not user.is_authenticated:
             return queryset.none() if value else queryset
         return (
-            queryset.filter(ffavorite_by__user=user)
+            queryset.filter(favorited_by__user=user)
             if value
-            else queryset.exclude(favorite_by__user=user)
+            else queryset.exclude(favorited_by__user=user)
         )
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
@@ -46,5 +46,5 @@ class RecipeFilter(FilterSet):
         return (
             queryset.filter(shoppingcarts__user=user)
             if value
-            else queryset.exclude(sshoppingcarts__user=user)
+            else queryset.exclude(shoppingcarts__user=user)
         )
