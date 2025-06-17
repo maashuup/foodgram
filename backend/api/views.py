@@ -213,35 +213,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorites(self, request):
         """Список рецептов, добавленных в избранное текущим пользователем."""
-        recipes = Recipe.objects.filter(favorites__user=request.user)
-        serializer = RecipeSerializer(
-            recipes, many=True, context={'request': request}
-        )
-        return Response(serializer.data)
-        # recipes = Recipe.objects.filter(
-        #     favorites__user=request.user
-        # ).select_related('author').prefetch_related(
-        #     'tags',
-        #     'ingredient_amounts__ingredient'
-        # ).annotate(
-        #     is_favorited=Value(True, output_field=BooleanField()),
-        #     is_in_shopping_cart=Exists(
-        #         ShoppingCart.objects.filter(
-        #             user=request.user, recipe=OuterRef('pk')
-        #         )
-        #     )
-        # )
-        # page = self.paginate_queryset(recipes)
-        # if page is not None:
-        #     serializer = RecipeSerializer(
-        #         page, many=True, context={'request': request}
-        #     )
-        #     return self.get_paginated_response(serializer.data)
-
+        # recipes = Recipe.objects.filter(favorites__user=request.user)
         # serializer = RecipeSerializer(
         #     recipes, many=True, context={'request': request}
         # )
         # return Response(serializer.data)
+        recipes = Recipe.objects.filter(
+            favorites__user=request.user
+        ).select_related('author').prefetch_related(
+            'tags',
+            'ingredient_amounts__ingredient'
+        ).annotate(
+            is_favorited=Value(True, output_field=BooleanField()),
+            is_in_shopping_cart=Exists(
+                ShoppingCart.objects.filter(
+                    user=request.user, recipe=OuterRef('pk')
+                )
+            )
+        )
+        page = self.paginate_queryset(recipes)
+        if page is not None:
+            serializer = RecipeSerializer(
+                page, many=True, context={'request': request}
+            )
+            return self.get_paginated_response(serializer.data)
+
+        serializer = RecipeSerializer(
+            recipes, many=True, context={'request': request}
+        )
+        return Response(serializer.data)
 
     @action(
         detail=True,
