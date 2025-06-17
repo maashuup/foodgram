@@ -206,18 +206,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
             error_not_found='Рецепт не найден в избранном'
         )
 
-    # @action(
-    #     detail=False,
-    #     methods=['get'],
-    #     permission_classes=[IsAuthenticated]
-    # )
-    # def favorites(self, request):
-    #     """Список рецептов, добавленных в избранное текущим пользователем."""
-        # recipes = Recipe.objects.filter(favorites__user=request.user)
-        # serializer = RecipeSerializer(
-        #     recipes, many=True, context={'request': request}
-        # )
-        # return Response(serializer.data)
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated]
+    )
+    def favorites(self, request):
+        """Список рецептов, добавленных в избранное текущим пользователем."""
+        recipes = Recipe.objects.filter(favorites__user=request.user)
+        serializer = RecipeSerializer(
+            recipes, many=True, context={'request': request}
+        )
+        return Response(serializer.data)
         # recipes = Recipe.objects.filter(
         #     favorites__user=request.user
         # ).select_related('author').prefetch_related(
