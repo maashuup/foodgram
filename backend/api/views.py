@@ -1,4 +1,4 @@
-from django.db.models import Count, Exists, OuterRef, Sum
+from django.db.models import BooleanField, Count, Exists, OuterRef, Sum, Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -157,48 +157,33 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     permission_classes = [IsAuthorOrReadOnly]
 
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     queryset = Recipe.objects.select_related('author').prefetch_related(
-    #         'tags',
-    #         'ingredient_amounts__ingredient'
-    #     )
-
-    #     if user.is_authenticated:
-    #         queryset = queryset.annotate(
-    #             is_favorited=Exists(
-    #                 Favorite.objects.filter(
-    #                     user=user, recipe=OuterRef('pk')
-    #                 )
-    #             ),
-    #             is_in_shopping_cart=Exists(
-    #                 ShoppingCart.objects.filter(
-    #                     user=user, recipe=OuterRef('pk')
-    #                 )
-    #             )
-    #         )
-    #     else:
-    #         queryset = queryset.annotate(
-    #             is_favorited=Value(False, output_field=BooleanField()),
-    #             is_in_shopping_cart=Value(False, output_field=BooleanField())
-    #         )
-
-    #     return self.filter_queryset(queryset)
     def get_queryset(self):
         user = self.request.user
         queryset = Recipe.objects.select_related('author').prefetch_related(
             'tags',
             'ingredient_amounts__ingredient'
-        ).annotate(
-            is_favorited=Exists(
-                Favorite.objects.filter(user=user, recipe=OuterRef('pk'))
-            ),
-            is_in_shopping_cart=Exists(
-                ShoppingCart.objects.filter(user=user, recipe=OuterRef('pk'))
-            )
         )
 
-        return queryset
+        if user.is_authenticated:
+            queryset = queryset.annotate(
+                is_favorited=Exists(
+                    Favorite.objects.filter(
+                        user=user, recipe=OuterRef('pk')
+                    )
+                ),
+                is_in_shopping_cart=Exists(
+                    ShoppingCart.objects.filter(
+                        user=user, recipe=OuterRef('pk')
+                    )
+                )
+            )
+        else:
+            queryset = queryset.annotate(
+                is_favorited=Value(False, output_field=BooleanField()),
+                is_in_shopping_cart=Value(False, output_field=BooleanField())
+            )
+
+        return self.filter_queryset(queryset)
 
     def perform_create(self, serializer):
         """Создаёт рецепт, устанавливая текущего пользователя автором."""
@@ -228,35 +213,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorites(self, request):
         """Список рецептов, добавленных в избранное текущим пользователем."""
-        recipes = Recipe.objects.filter(favorites__user=request.user)
+        recipes = Recipe.objects.filter(favorite_by__user=request.user)
         serializer = RecipeSerializer(
             recipes, many=True, context={'request': request}
         )
         return Response(serializer.data)
-        # recipes = Recipe.objects.filter(
-        #     favorites__user=request.user
-        # ).select_related('author').prefetch_related(
-        #     'tags',
-        #     'ingredient_amounts__ingredient'
-        # ).annotate(
-        #     is_favorited=Value(True, output_field=BooleanField()),
-        #     is_in_shopping_cart=Exists(
-        #         ShoppingCart.objects.filter(
-        #             user=request.user, recipe=OuterRef('pk')
-        #         )
-        #     )
-        # )
-        # page = self.paginate_queryset(recipes)
-        # if page is not None:
-        #     serializer = RecipeSerializer(
-        #         page, many=True, context={'request': request}
-        #     )
-        #     return self.get_paginated_response(serializer.data)
-
-        # serializer = RecipeSerializer(
-        #     recipes, many=True, context={'request': request}
-        # )
-        # return Response(serializer.data)
 
     @action(
         detail=True,
