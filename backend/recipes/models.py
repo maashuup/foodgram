@@ -177,7 +177,7 @@ class UserRecipeRelation(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
-        related_name='%(class)ss_by'
+        related_name='%(class)s_by'
     )
 
     class Meta:
