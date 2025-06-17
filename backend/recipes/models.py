@@ -197,6 +197,7 @@ class Favorite(UserRecipeRelation):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
+        default_related_name = 'favorite_by'
 
     def __str__(self):
         return f'{self.user} likes {self.recipe}'
