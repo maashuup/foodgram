@@ -95,6 +95,7 @@ class FollowSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
+    following = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         model = Follow
@@ -114,6 +115,11 @@ class FollowSerializer(serializers.ModelSerializer):
                 'Вы уже подписаны на этого пользователя.'
             )
         return value
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        following = validated_data['following']
+        return Follow.objects.create(user=user, following=following)
 
     def get_is_subscribed(self, obj):
         """Подписан ли пользователь на автора."""

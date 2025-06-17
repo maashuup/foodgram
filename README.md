@@ -1,3 +1,10 @@
+# Данные для проверки
+
+ip: 84.201.143.252
+https://maashuup.zapto.org/
+email: admin@example.com
+password: Practicum123!
+
 # Foodgram
 
 Foodgram - это веб-приложение для публикации рецептов.

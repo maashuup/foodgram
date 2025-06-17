@@ -1,9 +1,3 @@
-## Данные для проверки
-ip: 84.201.143.252
-https://maashuup.zapto.org/
-email: admin@example.com
-password: Practicum123!
-
 ## Postman-коллекция для проверки API
 
 Файл `foodgram.postman_collection.json` содержит postman-коллекцию - набор заранее подготовленных запросов для проверки работы API.

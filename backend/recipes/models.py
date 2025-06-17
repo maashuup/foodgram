@@ -193,14 +193,16 @@ class UserRecipeRelation(models.Model):
 
 
 class Favorite(UserRecipeRelation):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorite_by',
+        verbose_name='Рецепт'
+    )
 
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
-        default_related_name = 'favorite_by'
-
-    def __str__(self):
-        return f'{self.user} likes {self.recipe}'
 
 
 class ShoppingCart(UserRecipeRelation):
