@@ -327,31 +327,43 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         return value
 
-    # def add_ingredients(self, recipe, ingredients_data):
-    #     """Добавляет ингредиенты к рецепту."""
-    #     RecipeIngredient.objects.bulk_create([
-    #         RecipeIngredient(
-    #             recipe=recipe,
-    #             ingredient_id=ingredient['id'],
-    #             amount=ingredient['amount']
-    #         )
-    #         for ingredient in ingredients_data
-    #     ])
+    def validate_tags(self, value):
+        """Валидация тегов."""
+        if not value:
+            raise serializers.ValidationError(
+                'Необходимо указать хотя бы один тег.'
+            )
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError(
+                'Теги должны быть уникальны.'
+            )
+        return value
+
     def add_ingredients(self, recipe, ingredients_data):
-        objs = []
-        for item in ingredients_data:
-            ing = item.get('ingredient') or item.get('id')
-
-            # ✅ ОБЯЗАТЕЛЬНО! Преобразуем в объект
-            if isinstance(ing, int):
-                ing = Ingredient.objects.get(pk=ing)
-
-            objs.append(RecipeIngredient(
+        """Добавляет ингредиенты к рецепту."""
+        RecipeIngredient.objects.bulk_create([
+            RecipeIngredient(
                 recipe=recipe,
-                ingredient=ing,
-                amount=item['amount']
-            ))
-        RecipeIngredient.objects.bulk_create(objs)
+                ingredient_id=ingredient['id'],
+                amount=ingredient['amount']
+            )
+            for ingredient in ingredients_data
+        ])
+    # def add_ingredients(self, recipe, ingredients_data):
+    #     objs = []
+    #     for item in ingredients_data:
+    #         ing = item.get('ingredient') or item.get('id')
+
+    #         # ✅ ОБЯЗАТЕЛЬНО! Преобразуем в объект
+    #         if isinstance(ing, int):
+    #             ing = Ingredient.objects.get(pk=ing)
+
+    #         objs.append(RecipeIngredient(
+    #             recipe=recipe,
+    #             ingredient=ing,
+    #             amount=item['amount']
+    #         ))
+    #     RecipeIngredient.objects.bulk_create(objs)
 
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
