@@ -260,6 +260,35 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         return attrs
 
+    # def validate_ingredients(self, value):
+    #     """Валидация ингредиентов."""
+    #     if not value:
+    #         raise serializers.ValidationError(
+    #             'Необходимо добавить хотя бы один ингредиент.'
+    #         )
+
+    #     ingredient_ids = [item.get('id') for item in value]
+    #     if len(ingredient_ids) != len(set(ingredient_ids)):
+    #         raise serializers.ValidationError(
+    #             'Ингредиенты должны быть уникальны.'
+    #         )
+    #     for item in value:
+    #         amount = item.get('amount')
+
+    #         if isinstance(amount, str) and amount.isdigit():
+    #             amount = int(amount)
+
+    #         if not isinstance(amount, int):
+    #             raise serializers.ValidationError(
+    #                 'Количество ингредиента должно быть числом.'
+    #             )
+
+    #         if amount < 1:
+    #             raise serializers.ValidationError(
+    #                 'Количество ингредиента должно быть не менее 1.'
+    #             )
+
+    #     return value
     def validate_ingredients(self, value):
         """Валидация ингредиентов."""
         if not value:
@@ -267,14 +296,16 @@ class RecipeSerializer(serializers.ModelSerializer):
                 'Необходимо добавить хотя бы один ингредиент.'
             )
 
-        ingredient_ids = [item.get('id') for item in value]
-        if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise serializers.ValidationError(
-                'Ингредиенты должны быть уникальны.'
-            )
+        ingredient_ids = []
         for item in value:
-            amount = item.get('amount')
+            ingredient = item.get('ingredient')  # ← вместо .get('id')
+            if not ingredient:
+                raise serializers.ValidationError('Ингредиент не найден.')
 
+            ingredient_id = ingredient.id if hasattr(ingredient, 'id') else ingredient
+            ingredient_ids.append(ingredient_id)
+
+            amount = item.get('amount')
             if isinstance(amount, str) and amount.isdigit():
                 amount = int(amount)
 
@@ -282,11 +313,15 @@ class RecipeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Количество ингредиента должно быть числом.'
                 )
-
             if amount < 1:
                 raise serializers.ValidationError(
                     'Количество ингредиента должно быть не менее 1.'
                 )
+
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            raise serializers.ValidationError(
+                'Ингредиенты должны быть уникальны.'
+            )
 
         return value
 
