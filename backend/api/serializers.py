@@ -196,10 +196,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     """"Сериализатор ингредиентов рецепта."""
 
     id = serializers.IntegerField()
-    # id = serializers.PrimaryKeyRelatedField(
-    #     source='ingredient',
-    #     queryset=Ingredient.objects.all()
-    # )
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
@@ -260,18 +256,48 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         return attrs
 
+    # def validate_ingredients(self, value):
+    #     """Валидация ингредиентов."""
+    #     if not value:
+    #         raise serializers.ValidationError(
+    #             'Необходимо добавить хотя бы один ингредиент.'
+    #         )
+
+    #     ingredient_ids = [item.get('id') for item in value]
+    #     if len(ingredient_ids) != len(set(ingredient_ids)):
+    #         raise serializers.ValidationError(
+    #             'Ингредиенты должны быть уникальны.'
+    #         )
+    #     for item in value:
+    #         amount = item.get('amount')
+
+    #         if isinstance(amount, str) and amount.isdigit():
+    #             amount = int(amount)
+
+    #         if not isinstance(amount, int):
+    #             raise serializers.ValidationError(
+    #                 'Количество ингредиента должно быть числом.'
+    #             )
+
+    #         if amount < 1:
+    #             raise serializers.ValidationError(
+    #                 'Количество ингредиента должно быть не менее 1.'
+    #             )
+
+    #     return value
     def validate_ingredients(self, value):
-        """Валидация ингредиентов."""
         if not value:
             raise serializers.ValidationError(
                 'Необходимо добавить хотя бы один ингредиент.'
             )
 
-        ingredient_ids = [item.get('id') for item in value]
+        ingredient_ids = [item['ingredient'].id for item in value]
+
         if len(ingredient_ids) != len(set(ingredient_ids)):
             raise serializers.ValidationError(
                 'Ингредиенты должны быть уникальны.'
             )
+
         for item in value:
             amount = item.get('amount')
 
