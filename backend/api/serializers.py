@@ -286,41 +286,6 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         return value
 
-    # def validate_ingredients(self, value):
-    #     if not value:
-    #         raise serializers.ValidationError(
-    #             'Необходимо добавить хотя бы один ингредиент.'
-    #         )
-
-    #     # Собираем ID ингредиентов (числа или объекты Ingredient)
-    #     ingredient_ids = []
-    #     for item in value:
-    #         ing = item.get('ingredient') or item.get('id')
-    #         # Если это объект, достаём .id, если число — оставляем
-    #         ing_id = ing.id if hasattr(ing, 'id') else ing
-    #         ingredient_ids.append(ing_id)
-
-    #         amount = item.get('amount')
-    #         if isinstance(amount, str) and amount.isdigit():
-    #             amount = int(amount)
-
-    #         if not isinstance(amount, int):
-    #             raise serializers.ValidationError(
-    #                 'Количество ингредиента должно быть числом.'
-    #             )
-
-    #         if amount < 1:
-    #             raise serializers.ValidationError(
-    #                 'Количество ингредиента должно быть не менее 1.'
-    #             )
-
-    #     if len(ingredient_ids) != len(set(ingredient_ids)):
-    #         raise serializers.ValidationError(
-    #             'Ингредиенты должны быть уникальны.'
-    #         )
-
-    #     return value
-
     # def add_ingredients(self, recipe, ingredients_data):
     #     """Добавляет ингредиенты к рецепту."""
     #     RecipeIngredient.objects.bulk_create([
@@ -333,15 +298,20 @@ class RecipeSerializer(serializers.ModelSerializer):
     #     ])
     def add_ingredients(self, recipe, ingredients_data):
         objs = []
+
         for item in ingredients_data:
-            ing = item.get('ingredient') or item.get('id')
-            if isinstance(ing, int):
-                ing = Ingredient.objects.get(pk=ing)
+            ingredient_obj = item.get('ingredient') or item.get('id')
+
+            # Преобразуем id в объект, если нужно
+            if isinstance(ingredient_obj, int):
+                ingredient_obj = Ingredient.objects.get(pk=ingredient_obj)
+
             objs.append(RecipeIngredient(
                 recipe=recipe,
-                ingredient=ing,
+                ingredient=ingredient_obj,
                 amount=item['amount']
             ))
+
         RecipeIngredient.objects.bulk_create(objs)
 
     def create(self, validated_data):
