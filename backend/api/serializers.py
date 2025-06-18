@@ -285,22 +285,22 @@ class RecipeSerializer(serializers.ModelSerializer):
     #             )
 
     #     return value
+
     def validate_ingredients(self, value):
         if not value:
             raise serializers.ValidationError(
                 'Необходимо добавить хотя бы один ингредиент.'
             )
 
-        ingredient_ids = [item['ingredient'].id for item in value]
-
-        if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise serializers.ValidationError(
-                'Ингредиенты должны быть уникальны.'
-            )
-
+        # Собираем ID ингредиентов (числа или объекты Ingredient)
+        ingredient_ids = []
         for item in value:
-            amount = item.get('amount')
+            ing = item.get('ingredient') or item.get('id')
+            # Если это объект, достаём .id, если число — оставляем
+            ing_id = ing.id if hasattr(ing, 'id') else ing
+            ingredient_ids.append(ing_id)
 
+            amount = item.get('amount')
             if isinstance(amount, str) and amount.isdigit():
                 amount = int(amount)
 
@@ -314,18 +314,11 @@ class RecipeSerializer(serializers.ModelSerializer):
                     'Количество ингредиента должно быть не менее 1.'
                 )
 
-        return value
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            raise serializers.ValidationError(
+                'Ингредиенты должны быть уникальны.'
+            )
 
-    def validate_tags(self, value):
-        """Валидация тегов."""
-        if not value:
-            raise serializers.ValidationError(
-                'Необходимо указать хотя бы один тег.'
-            )
-        if len(value) != len(set(value)):
-            raise serializers.ValidationError(
-                'Теги должны быть уникальны.'
-            )
         return value
 
     def add_ingredients(self, recipe, ingredients_data):
