@@ -344,7 +344,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             ))
         RecipeIngredient.objects.bulk_create(objs)
 
-
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
         ingredients_data = validated_data.pop('ingredient_amounts', [])
