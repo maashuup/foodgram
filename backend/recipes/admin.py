@@ -11,7 +11,8 @@ class Admin(UserAdmin):
 
     list_display = ('id', 'email', 'username', 'first_name', 'last_name',
                     'is_staff')
-    search_fields = ('email', 'username')
+    list_display_links = ('email',)
+    search_fields = ('email', 'username', 'first_name', 'last_name')
     list_filter = ('is_staff', 'is_superuser', 'is_active')
     ordering = ('id',)
     fieldsets = (
@@ -57,10 +58,16 @@ class RecipeAdmin(admin.ModelAdmin):
     """Настройки админки для рецептов."""
 
     list_display = ('id', 'name', 'author',)
-    search_fields = ('name', 'author',)
+    search_fields = ('name', 'author__username', 'author__email')
     list_filter = ('tags',)
     filter_horizontal = ('ingredients',)
     inlines = [RecipeIngredientInline]
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related(
+            'author'
+        ).prefetch_related('ingredients', 'tags')
 
 
 @admin.register(Tag)

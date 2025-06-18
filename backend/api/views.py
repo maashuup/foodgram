@@ -132,6 +132,7 @@ class UserViewSet(DjoserUserViewSet):
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """Просмотр тегов."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [AllowAny]
@@ -140,6 +141,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Просмотр ингредиентов."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
@@ -150,6 +152,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Управление рецептами (создание, получение, редактирование, удаление)."""
+
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     pagination_class = PageNumberPagination
