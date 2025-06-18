@@ -87,7 +87,8 @@ class FollowSerializer(serializers.ModelSerializer):
     """Сериализатор подписок."""
 
     email = serializers.ReadOnlyField(source='following.email')
-    id = serializers.ReadOnlyField(source='following.id')
+    # id = serializers.ReadOnlyField(source='following.id')
+    following_id = serializers.ReadOnlyField(source='following.id')
     username = serializers.ReadOnlyField(source='following.username')
     first_name = serializers.ReadOnlyField(source='following.first_name')
     last_name = serializers.ReadOnlyField(source='following.last_name')
@@ -99,9 +100,9 @@ class FollowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Follow
-        fields = ('email', 'id', 'username', 'first_name', 'last_name',
-                  'is_subscribed', 'recipes', 'recipes_count', 'avatar',
-                  'following')
+        fields = ('email', 'following_id', 'username', 'first_name',
+                  'last_name', 'is_subscribed', 'recipes', 'recipes_count',
+                  'avatar', 'following')
 
     def validate_following(self, value):
         """Валидация подписки."""
