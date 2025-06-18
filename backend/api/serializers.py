@@ -298,20 +298,18 @@ class RecipeSerializer(serializers.ModelSerializer):
     #     ])
     def add_ingredients(self, recipe, ingredients_data):
         objs = []
-
         for item in ingredients_data:
-            ingredient_obj = item.get('ingredient') or item.get('id')
+            ing = item.get('ingredient') or item.get('id')
 
-            # Преобразуем id в объект, если нужно
-            if isinstance(ingredient_obj, int):
-                ingredient_obj = Ingredient.objects.get(pk=ingredient_obj)
+            # ✅ ОБЯЗАТЕЛЬНО! Преобразуем в объект
+            if isinstance(ing, int):
+                ing = Ingredient.objects.get(pk=ing)
 
             objs.append(RecipeIngredient(
                 recipe=recipe,
-                ingredient=ingredient_obj,
+                ingredient=ing,
                 amount=item['amount']
             ))
-
         RecipeIngredient.objects.bulk_create(objs)
 
     def create(self, validated_data):
