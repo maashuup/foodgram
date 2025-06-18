@@ -302,7 +302,9 @@ class RecipeSerializer(serializers.ModelSerializer):
             if not ingredient:
                 raise serializers.ValidationError('Ингредиент не найден.')
 
-            ingredient_id = ingredient.id if hasattr(ingredient, 'id') else ingredient
+            ingredient_id = ingredient.id if hasattr(
+                ingredient, 'id'
+            ) else ingredient
             ingredient_ids.append(ingredient_id)
 
             amount = item.get('amount')
