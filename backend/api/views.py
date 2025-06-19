@@ -82,7 +82,10 @@ class UserViewSet(DjoserUserViewSet):
 
             serializer = FollowSerializer(
                 data=data,
-                context={'request': request}
+                context={
+                    'request': request,
+                    'following_user': user_to_follow
+                }
             )
             print('[DEBUG] serializer создан')
 

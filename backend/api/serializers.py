@@ -96,16 +96,12 @@ class FollowSerializer(serializers.ModelSerializer):
     recipes = serializers.SerializerMethodField()
     # recipes_count = serializers.IntegerField(read_only=True)
     recipes_count = serializers.SerializerMethodField()
-    following = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        write_only=True
-    )
 
     class Meta:
         model = Follow
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'is_subscribed', 'recipes', 'recipes_count',
-                  'avatar', 'following')
+                  'avatar',)
 
     def get_recipes_count(self, obj):
         return obj.following.recipes.count()
@@ -125,7 +121,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        following = validated_data['following']
+        following = self.context['following_user']
         print(f'[DEBUG] user: {user} ({type(user)})')
         print(f'[DEBUG] following: {following} ({type(following)})')
         return Follow.objects.create(user=user, following=following)
