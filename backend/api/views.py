@@ -194,17 +194,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        # базовый запрос
         queryset = Recipe.objects.select_related('author').prefetch_related(
             'tags', 'ingredient_amounts__ingredient'
         )
 
-        # сначала фильтрация
-        queryset = self.filter_queryset(queryset)
-
-        # потом — аннотация
         if user.is_authenticated:
-            queryset = queryset.annotate(
+            return queryset.annotate(
                 is_favorited=Exists(
                     Favorite.objects.filter(user=user, recipe=OuterRef('pk'))
                 ),
@@ -214,13 +209,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     )
                 )
             )
-        else:
-            queryset = queryset.annotate(
-                is_favorited=Value(False, output_field=BooleanField()),
-                is_in_shopping_cart=Value(False, output_field=BooleanField())
-            )
 
-        return queryset
+        return queryset.annotate(
+            is_favorited=Value(False, output_field=BooleanField()),
+            is_in_shopping_cart=Value(False, output_field=BooleanField())
+        )
 
     def perform_create(self, serializer):
         """Создаёт рецепт, устанавливая текущего пользователя автором."""
@@ -243,18 +236,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
             error_not_found='Рецепт не найден в избранном'
         )
 
-    @action(
-        detail=False,
-        methods=['get'],
-        permission_classes=[IsAuthenticated]
-    )
-    def favorites(self, request):
-        """Список рецептов, добавленных в избранное текущим пользователем."""
-        recipes = Recipe.objects.filter(favorite_by__user=request.user)
-        serializer = RecipeSerializer(
-            recipes, many=True, context={'request': request}
-        )
-        return Response(serializer.data)
+    # @action(
+    #     detail=False,
+    #     methods=['get'],
+    #     permission_classes=[IsAuthenticated]
+    # )
+    # def favorites(self, request):
+    #     """Список рецептов, добавленных в избранное текущим пользователем."""
+    #     recipes = Recipe.objects.filter(favorite_by__user=request.user)
+    #     serializer = RecipeSerializer(
+    #         recipes, many=True, context={'request': request}
+    #     )
+    #     return Response(serializer.data)
 
     @action(
         detail=True,
