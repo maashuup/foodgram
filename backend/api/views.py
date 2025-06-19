@@ -158,7 +158,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Управление рецептами (создание, получение, редактирование, удаление)."""
 
     pagination_class = PageNumberPagination
-    queryset = Recipe.objects.all()
+    # queryset = Recipe.objects.all()
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     serializer_class = RecipeSerializer
@@ -195,7 +195,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         queryset = Recipe.objects.select_related('author').prefetch_related(
-            'tags', 'ingredient_amounts__ingredient'
+            'tags'  # ⛔ временно убрано: 'ingredient_amounts__ingredient'
         )
 
         if user.is_authenticated:
