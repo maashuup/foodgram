@@ -75,58 +75,26 @@ class UserViewSet(DjoserUserViewSet):
         url_path='subscribe'
     )
     def subscribe(self, request, pk=None, **kwargs):
-        print('[DEBUG] subscribe вызван')
-
+        """Подписка или отписка от пользователя."""
         user_to_follow = get_object_or_404(User, pk=pk)
-        print('[DEBUG] user_to_follow:', user_to_follow)
 
         if request.method == 'POST':
-            data = {'following': user_to_follow.id}
-            print('[DEBUG] data:', data)
-
-            # serializer = FollowSerializer(
-            #     data=data,
-            #     context={
-            #         'request': request,
-            #         'following_user': user_to_follow
-            #     }
-            # )
-            serializer = FollowCreateSerializer(
-                data={'user': request.user.id, 'following': user_to_follow.id}
+            serializer = FollowSerializer(
+                data={'following': user_to_follow.id},
+                context={
+                    'request': request,
+                    'following_user': user_to_follow
+                }
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            print('[DEBUG] serializer создан')
+            follow_obj = serializer.save()
+            return Response(
+                FollowSerializer(
+                    follow_obj, context={'request': request}
+                ).data,
+                status=status.HTTP_201_CREATED
+            )
 
-            try:
-                serializer.is_valid(raise_exception=True)
-                print('[DEBUG] данные валидны')
-                follow_obj = serializer.save()
-                print('[DEBUG] сохранено:', follow_obj)
-
-                response_data = FollowSerializer(
-                    follow_obj,
-                    context={'request': request}
-                ).data
-
-                return Response(response_data, status=status.HTTP_201_CREATED)
-
-            except ValidationError as e:
-                print('[DEBUG] ошибки валидации:', e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
-
-            except Exception as e:
-                print('[DEBUG] Ошибка сериализации:\n', traceback.format_exc())
-                return Response(
-                    {
-                        'error': 'Ошибка сериализации',
-                        'detail': str(e),
-                        'trace': traceback.format_exc(),
-                    },
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-
-        # DELETE подписки
         follow_qs = Follow.objects.filter(
             user=request.user,
             following=user_to_follow
@@ -137,38 +105,7 @@ class UserViewSet(DjoserUserViewSet):
                 {'error': 'Вы не подписаны на этого пользователя.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    # def subscribe(self, request, pk=None):
-    #     """Подписка или отписка от пользователя."""
-    #     user_to_follow = get_object_or_404(User, pk=pk)
-    #     if request.method == 'POST':
-    #         data = {'following': user_to_follow.id}
-    #         serializer = FollowSerializer(
-    #             data=data,
-    #             context={'request': request}
-    #         )
-    #         serializer.is_valid(raise_exception=True)
-    #         follow_obj = serializer.save()
-    #         return Response(
-    #             FollowSerializer(
-    #                 follow_obj,
-    #                 context={'request': request}
-    #             ).data,
-    #             status=status.HTTP_201_CREATED
-    #         )
-    #     if request.method == 'DELETE':
-    #         follow_qs = Follow.objects.filter(
-    #             user=request.user, following=user_to_follow
-    #         )
-    #         deleted, _ = follow_qs.delete()
-    #         if deleted == 0:
-    #             return Response(
-    #                 {'error': 'Вы не подписаны на этого пользователя.'},
-    #                 status=status.HTTP_400_BAD_REQUEST
-    #             )
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
