@@ -71,7 +71,7 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[IsAuthenticated],
         url_path='subscribe'
     )
-    def subscribe(self, request, pk=None):
+    def subscribe(self, request, pk=None, **kwargs):
         print('[DEBUG] subscribe вызван')
 
         user_to_follow = get_object_or_404(User, pk=pk)
