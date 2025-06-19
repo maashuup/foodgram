@@ -145,6 +145,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_avatar(self, obj):
         """Получение URL аватара пользователя."""
+        print('[DEBUG get_avatar] obj:', obj)
         user = obj.following
         request = self.context.get('request')
         if user.avatar:
@@ -155,6 +156,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, obj):
         """Получение рецептов автора."""
+        print('[DEBUG get_recipes] obj:', obj)
         request = self.context.get('request')
         recipes_limit = None
         limit_value = request.query_params.get('recipes_limit')
