@@ -96,7 +96,10 @@ class FollowSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
-    following = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    following = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        write_only=True
+    )
 
     class Meta:
         model = Follow
@@ -117,9 +120,15 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         return value
 
+    # def create(self, validated_data):
+    #     user = self.context['request'].user
+    #     following = validated_data['following']
+    #     return Follow.objects.create(user=user, following=following)
     def create(self, validated_data):
         user = self.context['request'].user
         following = validated_data['following']
+        print(f'[DEBUG] user: {user} ({type(user)})')
+        print(f'[DEBUG] following: {following} ({type(following)})')
         return Follow.objects.create(user=user, following=following)
 
     def get_is_subscribed(self, obj):
@@ -134,19 +143,11 @@ class FollowSerializer(serializers.ModelSerializer):
             following=obj.following
         ).exists()
 
-    # def get_avatar(self, obj):
-    #     """Получение URL аватара пользователя."""
-    #     user = obj.following
-    #     request = self.context.get('request')
-    #     if user.avatar:
-    #         if request:
-    #             return request.build_absolute_uri(user.avatar.url)
-    #         return user.avatar.url
-    #     return None
     def get_avatar(self, obj):
+        """Получение URL аватара пользователя."""
         user = obj.following
         request = self.context.get('request')
-        if hasattr(user, 'avatar') and user.avatar:
+        if user.avatar:
             if request:
                 return request.build_absolute_uri(user.avatar.url)
             return user.avatar.url
