@@ -1,3 +1,5 @@
+import traceback
+
 from django.db.models import BooleanField, Count, Exists, OuterRef, Sum, Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -69,7 +71,6 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscribe(self, request, pk=None):
         print('[DEBUG] subscribe вызван')
-
         user_to_follow = get_object_or_404(User, pk=pk)
         print('[DEBUG] user_to_follow:', user_to_follow)
 
@@ -95,13 +96,16 @@ class UserViewSet(DjoserUserViewSet):
 
             try:
                 response_data = FollowSerializer(
-                    follow_obj,
-                    context={'request': request}
+                    follow_obj, context={'request': request}
                 ).data
             except Exception as e:
-                print('[DEBUG] Ошибка при сериализации ответа:', e)
+                print('[DEBUG] Ошибка сериализации:\n', traceback.format_exc())
                 return Response(
-                    {'error': 'Ошибка сериализации', 'detail': str(e)},
+                    {
+                        'error': 'Ошибка сериализации',
+                        'detail': str(e),
+                        'trace': traceback.format_exc()
+                    },
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
