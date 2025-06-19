@@ -1,5 +1,6 @@
 import traceback
 
+from django.contrib.auth import get_user_model
 from django.db.models import BooleanField, Count, Exists, OuterRef, Sum, Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -14,7 +15,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from recipes.models import (Favorite, Follow, Ingredient, Recipe,
-                            RecipeIngredient, ShoppingCart, Tag, User)
+                            RecipeIngredient, ShoppingCart, Tag,)
 
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
@@ -25,16 +26,15 @@ from .serializers import (AvatarSerializer, FavoriteSerializer,
                           UserSerializer, UserSerializerForMe)
 
 
+User = get_user_model()
+
+
 class UserViewSet(DjoserUserViewSet):
     """Вьюсет для управления пользователями."""
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
-
-    @action(detail=True, methods=['get'], url_path='debug-subscribe')
-    def debug_subscribe(self, request, pk=None):
-        return Response({'ok': True, 'pk': pk})
 
     def get_serializer_class(self):
         """Для эндпоинта /me используется другой сериализатор."""
