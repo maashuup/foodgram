@@ -88,14 +88,14 @@ class FollowSerializer(serializers.ModelSerializer):
 
     email = serializers.ReadOnlyField(source='following.email')
     id = serializers.ReadOnlyField(source='following.id')
-    # following_id = serializers.ReadOnlyField(source='following.id')
     username = serializers.ReadOnlyField(source='following.username')
     first_name = serializers.ReadOnlyField(source='following.first_name')
     last_name = serializers.ReadOnlyField(source='following.last_name')
     is_subscribed = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField(read_only=True)
+    # recipes_count = serializers.IntegerField(read_only=True)
+    recipes_count = serializers.SerializerMethodField()
     following = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         write_only=True
@@ -106,6 +106,9 @@ class FollowSerializer(serializers.ModelSerializer):
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'is_subscribed', 'recipes', 'recipes_count',
                   'avatar', 'following')
+
+    def get_recipes_count(self, obj):
+        return obj.following.recipes.count()
 
     def validate_following(self, value):
         """Валидация подписки."""
@@ -120,10 +123,6 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         return value
 
-    # def create(self, validated_data):
-    #     user = self.context['request'].user
-    #     following = validated_data['following']
-    #     return Follow.objects.create(user=user, following=following)
     def create(self, validated_data):
         user = self.context['request'].user
         following = validated_data['following']
