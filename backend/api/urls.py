@@ -13,5 +13,7 @@ router.register('ingredients', IngredientViewSet)
 urlpatterns = [
     path('api/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.authtoken')),
-    path('api/', include(router.urls)),
+    # path('api/', include(router.urls)),
+    path('api/', include((router.urls, 'api'), namespace='api')),
+
 ]
