@@ -19,10 +19,10 @@ from recipes.models import (Favorite, Follow, Ingredient, Recipe,
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (AvatarSerializer, FavoriteSerializer,
-                          FollowSerializer, FollowCreateSerializer,
-                          IngredientSerializer,
-                          RecipeSerializer, ShoppingCartSerializer,
-                          TagSerializer, UserSerializer, UserSerializerForMe)
+                          FollowCreateSerializer, FollowSerializer,
+                          IngredientSerializer, RecipeSerializer,
+                          ShoppingCartSerializer, TagSerializer,
+                          UserSerializer, UserSerializerForMe)
 
 
 class UserViewSet(DjoserUserViewSet):
