@@ -164,24 +164,52 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     permission_classes = [IsAuthorOrReadOnly]
 
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     queryset = Recipe.objects.select_related('author').prefetch_related(
+    #         'tags',
+    #         'ingredient_amounts__ingredient'
+    #     )
+
+    #     if user.is_authenticated:
+    #         queryset = queryset.annotate(
+    #             is_favorited=Exists(
+    #                 Favorite.objects.filter(
+    #                     user=user, recipe=OuterRef('pk')
+    #                 )
+    #             ),
+    #             is_in_shopping_cart=Exists(
+    #                 ShoppingCart.objects.filter(
+    #                     user=user, recipe=OuterRef('pk')
+    #                 )
+    #             )
+    #         )
+    #     else:
+    #         queryset = queryset.annotate(
+    #             is_favorited=Value(False, output_field=BooleanField()),
+    #             is_in_shopping_cart=Value(False, output_field=BooleanField())
+    #         )
+
+    #     return self.filter_queryset(queryset)
     def get_queryset(self):
         user = self.request.user
+
+        # базовый запрос
         queryset = Recipe.objects.select_related('author').prefetch_related(
-            'tags',
-            'ingredient_amounts__ingredient'
+            'tags', 'ingredient_amounts__ingredient'
         )
 
+        # сначала фильтрация
+        queryset = self.filter_queryset(queryset)
+
+        # потом — аннотация
         if user.is_authenticated:
             queryset = queryset.annotate(
                 is_favorited=Exists(
-                    Favorite.objects.filter(
-                        user=user, recipe=OuterRef('pk')
-                    )
+                    Favorite.objects.filter(user=user, recipe=OuterRef('pk'))
                 ),
                 is_in_shopping_cart=Exists(
-                    ShoppingCart.objects.filter(
-                        user=user, recipe=OuterRef('pk')
-                    )
+                    ShoppingCart.objects.filter(user=user, recipe=OuterRef('pk'))
                 )
             )
         else:
@@ -190,7 +218,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 is_in_shopping_cart=Value(False, output_field=BooleanField())
             )
 
-        return self.filter_queryset(queryset)
+        return queryset
 
     def perform_create(self, serializer):
         """Создаёт рецепт, устанавливая текущего пользователя автором."""
