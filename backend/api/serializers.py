@@ -376,3 +376,27 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             user=self.context['request'].user,
             **validated_data
         )
+
+
+class FollowCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follow
+        fields = ('user', 'following')
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'following'),
+                message='Вы уже подписаны на этого пользователя.'
+            )
+        ]
+
+    def validate(self, data):
+        if data['user'] == data['following']:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя.'
+            )
+        return data
+
+    def create(self, validated_data):
+        return Follow.objects.create(**validated_data)
+

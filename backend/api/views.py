@@ -19,7 +19,8 @@ from recipes.models import (Favorite, Follow, Ingredient, Recipe,
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (AvatarSerializer, FavoriteSerializer,
-                          FollowSerializer, IngredientSerializer,
+                          FollowSerializer, FollowCreateSerializer,
+                          IngredientSerializer,
                           RecipeSerializer, ShoppingCartSerializer,
                           TagSerializer, UserSerializer, UserSerializerForMe)
 
@@ -80,13 +81,18 @@ class UserViewSet(DjoserUserViewSet):
             data = {'following': user_to_follow.id}
             print('[DEBUG] data:', data)
 
-            serializer = FollowSerializer(
-                data=data,
-                context={
-                    'request': request,
-                    'following_user': user_to_follow
-                }
+            # serializer = FollowSerializer(
+            #     data=data,
+            #     context={
+            #         'request': request,
+            #         'following_user': user_to_follow
+            #     }
+            # )
+            serializer = FollowCreateSerializer(
+                data={'user': request.user.id, 'following': user_to_follow.id}
             )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             print('[DEBUG] serializer создан')
 
             try:
