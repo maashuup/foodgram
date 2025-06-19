@@ -87,8 +87,8 @@ class FollowSerializer(serializers.ModelSerializer):
     """Сериализатор подписок."""
 
     email = serializers.ReadOnlyField(source='following.email')
-    # id = serializers.ReadOnlyField(source='following.id')
-    following_id = serializers.ReadOnlyField(source='following.id')
+    id = serializers.ReadOnlyField(source='following.id')
+    # following_id = serializers.ReadOnlyField(source='following.id')
     username = serializers.ReadOnlyField(source='following.username')
     first_name = serializers.ReadOnlyField(source='following.first_name')
     last_name = serializers.ReadOnlyField(source='following.last_name')
@@ -100,7 +100,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Follow
-        fields = ('email', 'following_id', 'username', 'first_name',
+        fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'is_subscribed', 'recipes', 'recipes_count',
                   'avatar', 'following')
 
@@ -134,11 +134,19 @@ class FollowSerializer(serializers.ModelSerializer):
             following=obj.following
         ).exists()
 
+    # def get_avatar(self, obj):
+    #     """Получение URL аватара пользователя."""
+    #     user = obj.following
+    #     request = self.context.get('request')
+    #     if user.avatar:
+    #         if request:
+    #             return request.build_absolute_uri(user.avatar.url)
+    #         return user.avatar.url
+    #     return None
     def get_avatar(self, obj):
-        """Получение URL аватара пользователя."""
         user = obj.following
         request = self.context.get('request')
-        if user.avatar:
+        if hasattr(user, 'avatar') and user.avatar:
             if request:
                 return request.build_absolute_uri(user.avatar.url)
             return user.avatar.url
