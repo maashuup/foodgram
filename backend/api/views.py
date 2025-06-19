@@ -157,10 +157,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """Управление рецептами (создание, получение, редактирование, удаление)."""
 
+    pagination_class = PageNumberPagination
+    queryset = Recipe.objects.all()
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
-    pagination_class = PageNumberPagination
-    # queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = [IsAuthorOrReadOnly]
 
