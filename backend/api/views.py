@@ -69,6 +69,7 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscribe(self, request, pk=None):
         print('[DEBUG] subscribe вызван')
+
         user_to_follow = get_object_or_404(User, pk=pk)
         print('[DEBUG] user_to_follow:', user_to_follow)
 
@@ -92,12 +93,34 @@ class UserViewSet(DjoserUserViewSet):
             follow_obj = serializer.save()
             print('[DEBUG] сохранено:', follow_obj)
 
+            try:
+                response_data = FollowSerializer(
+                    follow_obj,
+                    context={'request': request}
+                ).data
+            except Exception as e:
+                print('[DEBUG] Ошибка при сериализации ответа:', e)
+                return Response(
+                    {'error': 'Ошибка сериализации', 'detail': str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            return Response(response_data, status=status.HTTP_201_CREATED)
+
+        # DELETE
+        follow_qs = Follow.objects.filter(
+            user=request.user,
+            following=user_to_follow
+        )
+        deleted, _ = follow_qs.delete()
+
+        if deleted == 0:
             return Response(
-                FollowSerializer(
-                    follow_obj, context={'request': request}
-                ).data,
-                status=status.HTTP_201_CREATED
+                {'error': 'Вы не подписаны на этого пользователя.'},
+                status=status.HTTP_400_BAD_REQUEST
             )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     # def subscribe(self, request, pk=None):
     #     """Подписка или отписка от пользователя."""
