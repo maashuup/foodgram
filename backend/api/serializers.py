@@ -155,34 +155,36 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, obj):
         """Получение рецептов автора."""
-        print('[DEBUG get_recipes] obj:', obj)
-        request = self.context.get('request')
-        recipes_limit = None
-        limit_value = request.query_params.get('recipes_limit')
-        if limit_value is not None:
+        try:
+            print('[DEBUG get_recipes] obj:', obj)
+            request = self.context.get('request')
             recipes_limit = None
-            if isinstance(limit_value, str) and limit_value.isdigit():
+            limit_value = request.query_params.get('recipes_limit')
+            if limit_value is not None and isinstance(
+                limit_value, str
+            ) and limit_value.isdigit():
                 recipes_limit = int(limit_value)
 
-        recipes_qs = obj.following.recipes.all()
-        if recipes_limit is not None:
-            recipes_qs = recipes_qs[:recipes_limit]
+            recipes_qs = obj.following.recipes.all()
+            if recipes_limit is not None:
+                recipes_qs = recipes_qs[:recipes_limit]
 
-        result = []
-        for recipe in recipes_qs:
-            result.append({
-                'id': recipe.id,
-                'name': recipe.name,
-                'image': (
-                    request.build_absolute_uri(recipe.image.url)
-                    if request and recipe.image
-                    else recipe.image.url if recipe.image
-                    else None
-                ),
-
-                'cooking_time': recipe.cooking_time
-            })
-        return result
+            result = []
+            for recipe in recipes_qs:
+                result.append({
+                    'id': recipe.id,
+                    'name': recipe.name,
+                    'image': (
+                        request.build_absolute_uri(recipe.image.url)
+                        if request and recipe.image else
+                        recipe.image.url if recipe.image else None
+                    ),
+                    'cooking_time': recipe.cooking_time
+                })
+            return result
+        except Exception as e:
+            print('[ERROR in get_recipes]:', e)
+            return []
 
 
 class AvatarSerializer(serializers.ModelSerializer):
