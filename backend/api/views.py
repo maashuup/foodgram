@@ -67,6 +67,38 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[IsAuthenticated],
         url_path='subscribe'
     )
+    def subscribe(self, request, pk=None):
+        print('[DEBUG] subscribe вызван')
+        user_to_follow = get_object_or_404(User, pk=pk)
+        print('[DEBUG] user_to_follow:', user_to_follow)
+
+        if request.method == 'POST':
+            data = {'following': user_to_follow.id}
+            print('[DEBUG] data:', data)
+
+            serializer = FollowSerializer(
+                data=data,
+                context={'request': request}
+            )
+            print('[DEBUG] serializer создан')
+
+            if not serializer.is_valid():
+                print('[DEBUG] ошибки в сериализаторе:', serializer.errors)
+                return Response(
+                    serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                )
+
+            print('[DEBUG] данные валидны')
+            follow_obj = serializer.save()
+            print('[DEBUG] сохранено:', follow_obj)
+
+            return Response(
+                FollowSerializer(
+                    follow_obj, context={'request': request}
+                ).data,
+                status=status.HTTP_201_CREATED
+            )
+
     # def subscribe(self, request, pk=None):
     #     """Подписка или отписка от пользователя."""
     #     user_to_follow = get_object_or_404(User, pk=pk)
@@ -96,33 +128,6 @@ class UserViewSet(DjoserUserViewSet):
     #                 status=status.HTTP_400_BAD_REQUEST
     #             )
     #         return Response(status=status.HTTP_204_NO_CONTENT)
-    def subscribe(self, request, pk=None):
-        print('[DEBUG] subscribe вызван')
-        user_to_follow = get_object_or_404(User, pk=pk)
-        print('[DEBUG] user_to_follow:', user_to_follow)
-
-        if request.method == 'POST':
-            data = {'following': user_to_follow.id}
-            print('[DEBUG] data:', data)
-
-            serializer = FollowSerializer(
-                data=data,
-                context={'request': request}
-            )
-            print('[DEBUG] serializer создан')
-
-            serializer.is_valid(raise_exception=True)
-            print('[DEBUG] данные валидны')
-
-            follow_obj = serializer.save()
-            print('[DEBUG] сохранено:', follow_obj)
-
-            return Response(
-                FollowSerializer(
-                    follow_obj, context={'request': request}
-                ).data,
-                status=status.HTTP_201_CREATED
-            )
 
     @action(
         detail=False,
