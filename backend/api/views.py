@@ -196,11 +196,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         queryset = Recipe.objects.select_related('author').prefetch_related(
-            'tags'  # ⛔ временно убрано: 'ingredient_amounts__ingredient'
+            'tags'
         )
 
         if user.is_authenticated:
-            return queryset.annotate(
+            queryset = queryset.annotate(
                 is_favorited=Exists(
                     Favorite.objects.filter(user=user, recipe=OuterRef('pk'))
                 ),
@@ -210,11 +210,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     )
                 )
             )
+        else:
+            queryset = queryset.annotate(
+                is_favorited=Value(False, output_field=BooleanField()),
+                is_in_shopping_cart=Value(False, output_field=BooleanField())
+            )
 
-        return queryset.annotate(
-            is_favorited=Value(False, output_field=BooleanField()),
-            is_in_shopping_cart=Value(False, output_field=BooleanField())
-        )
+        return queryset
 
     def perform_create(self, serializer):
         """Создаёт рецепт, устанавливая текущего пользователя автором."""
