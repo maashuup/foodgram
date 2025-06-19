@@ -8,6 +8,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -71,6 +72,7 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscribe(self, request, pk=None):
         print('[DEBUG] subscribe вызван')
+
         user_to_follow = get_object_or_404(User, pk=pk)
         print('[DEBUG] user_to_follow:', user_to_follow)
 
@@ -84,40 +86,40 @@ class UserViewSet(DjoserUserViewSet):
             )
             print('[DEBUG] serializer создан')
 
-            if not serializer.is_valid():
-                print('[DEBUG] ошибки в сериализаторе:', serializer.errors)
-                return Response(
-                    serializer.errors, status=status.HTTP_400_BAD_REQUEST
-                )
-
-            print('[DEBUG] данные валидны')
-            follow_obj = serializer.save()
-            print('[DEBUG] сохранено:', follow_obj)
-
             try:
+                serializer.is_valid(raise_exception=True)
+                print('[DEBUG] данные валидны')
+                follow_obj = serializer.save()
+                print('[DEBUG] сохранено:', follow_obj)
+
                 response_data = FollowSerializer(
-                    follow_obj, context={'request': request}
+                    follow_obj,
+                    context={'request': request}
                 ).data
+
+                return Response(response_data, status=status.HTTP_201_CREATED)
+
+            except ValidationError as e:
+                print('[DEBUG] ошибки валидации:', e.detail)
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
             except Exception as e:
                 print('[DEBUG] Ошибка сериализации:\n', traceback.format_exc())
                 return Response(
                     {
                         'error': 'Ошибка сериализации',
                         'detail': str(e),
-                        'trace': traceback.format_exc()
+                        'trace': traceback.format_exc(),
                     },
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-            return Response(response_data, status=status.HTTP_201_CREATED)
-
-        # DELETE
+        # DELETE подписки
         follow_qs = Follow.objects.filter(
             user=request.user,
             following=user_to_follow
         )
         deleted, _ = follow_qs.delete()
-
         if deleted == 0:
             return Response(
                 {'error': 'Вы не подписаны на этого пользователя.'},
