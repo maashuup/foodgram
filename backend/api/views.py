@@ -32,6 +32,10 @@ class UserViewSet(DjoserUserViewSet):
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
 
+    @action(detail=True, methods=['get'], url_path='debug-subscribe')
+    def debug_subscribe(self, request, pk=None):
+        return Response({'ok': True, 'pk': pk})
+
     def get_serializer_class(self):
         """Для эндпоинта /me используется другой сериализатор."""
         if self.action == 'me':
