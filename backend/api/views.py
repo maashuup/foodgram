@@ -160,7 +160,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     pagination_class = PageNumberPagination
-    queryset = Recipe.objects.all()
+    # queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = [IsAuthorOrReadOnly]
 
@@ -235,19 +235,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             error_exists='Рецепт уже в избранном',
             error_not_found='Рецепт не найден в избранном'
         )
-
-    # @action(
-    #     detail=False,
-    #     methods=['get'],
-    #     permission_classes=[IsAuthenticated]
-    # )
-    # def favorites(self, request):
-    #     """Список рецептов, добавленных в избранное текущим пользователем."""
-    #     recipes = Recipe.objects.filter(favorite_by__user=request.user)
-    #     serializer = RecipeSerializer(
-    #         recipes, many=True, context={'request': request}
-    #     )
-    #     return Response(serializer.data)
 
     @action(
         detail=True,
