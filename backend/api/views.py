@@ -67,38 +67,62 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[IsAuthenticated],
         url_path='subscribe'
     )
+    # def subscribe(self, request, pk=None):
+    #     """Подписка или отписка от пользователя."""
+    #     user_to_follow = get_object_or_404(User, pk=pk)
+    #     if request.method == 'POST':
+    #         data = {'following': user_to_follow.id}
+    #         serializer = FollowSerializer(
+    #             data=data,
+    #             context={'request': request}
+    #         )
+    #         serializer.is_valid(raise_exception=True)
+    #         follow_obj = serializer.save()
+    #         return Response(
+    #             FollowSerializer(
+    #                 follow_obj,
+    #                 context={'request': request}
+    #             ).data,
+    #             status=status.HTTP_201_CREATED
+    #         )
+    #     if request.method == 'DELETE':
+    #         follow_qs = Follow.objects.filter(
+    #             user=request.user, following=user_to_follow
+    #         )
+    #         deleted, _ = follow_qs.delete()
+    #         if deleted == 0:
+    #             return Response(
+    #                 {'error': 'Вы не подписаны на этого пользователя.'},
+    #                 status=status.HTTP_400_BAD_REQUEST
+    #             )
+    #         return Response(status=status.HTTP_204_NO_CONTENT)
     def subscribe(self, request, pk=None):
-        """Подписка или отписка от пользователя."""
+        print('[DEBUG] subscribe вызван')
         user_to_follow = get_object_or_404(User, pk=pk)
+        print('[DEBUG] user_to_follow:', user_to_follow)
 
         if request.method == 'POST':
             data = {'following': user_to_follow.id}
+            print('[DEBUG] data:', data)
+
             serializer = FollowSerializer(
                 data=data,
                 context={'request': request}
             )
+            print('[DEBUG] serializer создан')
+
             serializer.is_valid(raise_exception=True)
+            print('[DEBUG] данные валидны')
+
             follow_obj = serializer.save()
+            print('[DEBUG] сохранено:', follow_obj)
+
             return Response(
                 FollowSerializer(
-                    follow_obj,
-                    context={'request': request}
+                    follow_obj, context={'request': request}
                 ).data,
                 status=status.HTTP_201_CREATED
             )
-
-        if request.method == 'DELETE':
-            follow_qs = Follow.objects.filter(
-                user=request.user, following=user_to_follow
-            )
-
-            deleted, _ = follow_qs.delete()
-            if deleted == 0:
-                return Response(
-                    {'error': 'Вы не подписаны на этого пользователя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
