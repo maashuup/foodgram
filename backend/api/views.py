@@ -157,13 +157,12 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """Управление рецептами (создание, получение, редактирование, удаление)."""
 
-    pagination_class = PageNumberPagination
-    # queryset = Recipe.objects.all()
-    queryset = Recipe.objects.none()
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = RecipeFilter
+    queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = [IsAuthorOrReadOnly]
+    pagination_class = PageNumberPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RecipeFilter
 
     # def get_queryset(self):
     #     user = self.request.user
@@ -194,11 +193,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #     return self.filter_queryset(queryset)
     def get_queryset(self):
         user = self.request.user
-
         queryset = Recipe.objects.select_related('author').prefetch_related(
-            'tags'
+            'tags', 'ingredient_amounts__ingredient'
         )
-
         if user.is_authenticated:
             queryset = queryset.annotate(
                 is_favorited=Exists(
@@ -215,7 +212,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 is_favorited=Value(False, output_field=BooleanField()),
                 is_in_shopping_cart=Value(False, output_field=BooleanField())
             )
-
         return queryset
 
     def perform_create(self, serializer):
