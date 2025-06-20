@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import BooleanField, Count, Exists, OuterRef, Sum, Value
+from django.db.models import Count, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
