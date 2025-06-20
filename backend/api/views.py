@@ -190,7 +190,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 is_in_shopping_cart=Value(False, output_field=BooleanField())
             )
 
-        return self.filter_queryset(queryset)
+        return queryset
 
     def perform_create(self, serializer):
         """Создаёт рецепт, устанавливая текущего пользователя автором."""
