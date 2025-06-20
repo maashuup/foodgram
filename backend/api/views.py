@@ -164,32 +164,63 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     queryset = Recipe.objects.select_related('author').prefetch_related(
+    #         'tags',
+    #         'ingredient_amounts__ingredient'
+    #     )
+
+    #     if user.is_authenticated:
+    #         queryset = queryset.annotate(
+    #             is_favorited=Exists(
+    #                 Favorite.objects.filter(
+    #                     user=user, recipe=OuterRef('pk')
+    #                 )
+    #             ),
+    #             is_in_shopping_cart=Exists(
+    #                 ShoppingCart.objects.filter(
+    #                     user=user, recipe=OuterRef('pk')
+    #                 )
+    #             )
+    #         )
+    #     else:
+    #         queryset = queryset.annotate(
+    #             is_favorited=Value(False, output_field=BooleanField()),
+    #             is_in_shopping_cart=Value(False, output_field=BooleanField())
+    #         )
+
+    #     return queryset
     def get_queryset(self):
         user = self.request.user
         queryset = Recipe.objects.select_related('author').prefetch_related(
             'tags',
             'ingredient_amounts__ingredient'
         )
-
         if user.is_authenticated:
             queryset = queryset.annotate(
-                is_favorited=Exists(
+                annotated_is_favorited=Exists(
                     Favorite.objects.filter(
-                        user=user, recipe=OuterRef('pk')
+                        user=user,
+                        recipe=OuterRef('pk')
                     )
                 ),
-                is_in_shopping_cart=Exists(
+                annotated_is_in_shopping_cart=Exists(
                     ShoppingCart.objects.filter(
-                        user=user, recipe=OuterRef('pk')
+                        user=user,
+                        recipe=OuterRef('pk')
                     )
                 )
             )
         else:
             queryset = queryset.annotate(
-                is_favorited=Value(False, output_field=BooleanField()),
-                is_in_shopping_cart=Value(False, output_field=BooleanField())
+                annotated_is_favorited=Value(
+                    False, output_field=BooleanField()
+                ),
+                annotated_is_in_shopping_cart=Value(
+                    False, output_field=BooleanField()
+                )
             )
-
         return queryset
 
     def perform_create(self, serializer):
