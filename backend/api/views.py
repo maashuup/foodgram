@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Sum
+from django.db.models import BooleanField, Count, Exists, OuterRef, Sum, Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -191,38 +191,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #         )
 
     #     return self.filter_queryset(queryset)
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     queryset = Recipe.objects.select_related('author').prefetch_related(
-    #         'tags', 'ingredient_amounts__ingredient'
-    #     )
-    #     if user.is_authenticated:
-    #         queryset = queryset.annotate(
-    #             is_favorited=Exists(
-    #                 Favorite.objects.filter(user=user, recipe=OuterRef('pk'))
-    #             ),
-    #             is_in_shopping_cart=Exists(
-    #                 ShoppingCart.objects.filter(
-    #                     user=user, recipe=OuterRef('pk')
-    #                 )
-    #             )
-    #         )
-    #     else:
-    #         queryset = queryset.annotate(
-    #             is_favorited=Value(False, output_field=BooleanField()),
-    #             is_in_shopping_cart=Value(False, output_field=BooleanField())
-    #         )
-    #     return queryset
     def get_queryset(self):
         user = self.request.user
-        queryset = Recipe.objects.all()
-
-        if self.request.path.endswith('/favorites/'):
-            return queryset.filter(favorite_by__user=user)
-
-        if self.request.path.endswith('/shopping_cart/'):
-            return queryset.filter(shopping_carts_by__user=user)
-
+        queryset = Recipe.objects.select_related('author').prefetch_related(
+            'tags', 'ingredient_amounts__ingredient'
+        )
+        if user.is_authenticated:
+            queryset = queryset.annotate(
+                is_favorited=Exists(
+                    Favorite.objects.filter(user=user, recipe=OuterRef('pk'))
+                ),
+                is_in_shopping_cart=Exists(
+                    ShoppingCart.objects.filter(
+                        user=user, recipe=OuterRef('pk')
+                    )
+                )
+            )
+        else:
+            queryset = queryset.annotate(
+                is_favorited=Value(False, output_field=BooleanField()),
+                is_in_shopping_cart=Value(False, output_field=BooleanField())
+            )
         return queryset
 
     def perform_create(self, serializer):
