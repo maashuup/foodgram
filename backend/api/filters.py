@@ -30,6 +30,7 @@ class RecipeFilter(FilterSet):
         fields = ['author', 'tags', 'is_favorited', 'is_in_shopping_cart']
 
     def filter_is_favorited(self, queryset, name, value):
+        print('🔥 Фильтр is_favorited сработал! Значение:', value)
         user = self.request.user
         if not user.is_authenticated:
             return queryset.none() if value else queryset
