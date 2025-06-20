@@ -48,4 +48,3 @@ class RecipeFilter(FilterSet):
         if value:
             return queryset.filter(shoppingcarts_by__user=user)
         return queryset.exclude(shoppingcarts_by__user=user)
-
