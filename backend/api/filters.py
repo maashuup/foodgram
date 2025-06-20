@@ -20,12 +20,18 @@ class IngredientFilter(FilterSet):
 class RecipeFilter(FilterSet):
     author = django_filters.NumberFilter(field_name='author__id')
     tags = django_filters.AllValuesMultipleFilter(field_name='tags__slug')
+    # is_favorited = django_filters.BooleanFilter(
+    #     method='filter_is_favorited',
+    #     field_name='id'
+    # )
+    # is_in_shopping_cart = django_filters.BooleanFilter(
+    #     method='filter_is_in_shopping_cart'
+    # )
     is_favorited = django_filters.BooleanFilter(
-        method='filter_is_favorited',
-        field_name='id'
+        field_name='is_favorited', method='filter_is_favorited'
     )
     is_in_shopping_cart = django_filters.BooleanFilter(
-        method='filter_is_in_shopping_cart'
+        field_name='is_in_shopping_cart', method='filter_is_in_shopping_cart'
     )
 
     class Meta:
@@ -33,26 +39,17 @@ class RecipeFilter(FilterSet):
         fields = ['author', 'tags', 'is_favorited', 'is_in_shopping_cart']
 
     def filter_is_favorited(self, queryset, name, value):
-        print('🔥 Вызван filter_is_favorited, value =', value)
         user = self.request.user
         if not user.is_authenticated:
             return queryset.none() if value else queryset
 
-        favorite_ids = Favorite.objects.filter(
-            user=user
-        ).values_list('recipe_id', flat=True)
         if value:
-            return queryset.filter(id__in=favorite_ids)
-        return queryset.exclude(id__in=favorite_ids)
-
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        user = self.request.user
-        if not user.is_authenticated:
-            return queryset.none() if str(value) == '1' else queryset
-
-        if str(value) == '1':
-            return queryset.filter(shoppingcarts__user=user)
-        return queryset.exclude(shoppingcarts__user=user)
+            return queryset.filter(
+                is_favorited=True
+            )
+        return queryset.filter(
+            is_favorited=False
+        )
 
     # def filter_is_favorited(self, queryset, name, value):
     #     user = self.request.user
