@@ -1,7 +1,7 @@
 import django_filters
 from django_filters.rest_framework import FilterSet
 
-from recipes.models import Ingredient, Recipe
+from recipes.models import Ingredient, Recipe, Favorite
 
 
 class IngredientFilter(FilterSet):
@@ -29,14 +29,25 @@ class RecipeFilter(FilterSet):
         model = Recipe
         fields = ['author', 'tags', 'is_favorited', 'is_in_shopping_cart']
 
+    # def filter_is_favorited(self, queryset, name, value):
+    #     user = self.request.user
+    #     if not user.is_authenticated:
+    #         return queryset.none() if str(value) == '1' else queryset
+
+    #     if str(value) == '1':
+    #         return queryset.filter(favorite_by__user=user)
+    #     return queryset.exclude(favorite_by__user=user)
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
         if not user.is_authenticated:
             return queryset.none() if str(value) == '1' else queryset
-
         if str(value) == '1':
-            return queryset.filter(favorite_by__user=user)
-        return queryset.exclude(favorite_by__user=user)
+            return queryset.filter(
+                id__in=Favorite.objects.filter(user=user).values('recipe_id')
+            )
+        return queryset.exclude(
+            id__in=Favorite.objects.filter(user=user).values('recipe_id')
+        )
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
         user = self.request.user
