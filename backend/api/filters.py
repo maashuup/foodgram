@@ -1,7 +1,7 @@
 import django_filters
 from django_filters.rest_framework import FilterSet
 
-from recipes.models import Favorite, Ingredient, Recipe
+from recipes.models import Ingredient, Recipe, Favorite
 
 
 class IngredientFilter(FilterSet):
@@ -33,8 +33,8 @@ class RecipeFilter(FilterSet):
         print('🔥 Вызван filter_is_favorited, value =', value)
         user = self.request.user
         if not user.is_authenticated:
-            return queryset.none() if value == 'true' else queryset
-        if value == 'true':
+            return queryset.none() if str(value) == '1' else queryset
+        if str(value) == '1':
             return queryset.filter(
                 id__in=Favorite.objects.filter(user=user).values('recipe_id')
             )
