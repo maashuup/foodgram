@@ -259,7 +259,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """Выгрузка списка покупок в файл с указанием рецептов и суммированием
         одинаковых ингредиентов."""
-        recipes = Recipe.objects.filter(shoppingcarts__user=request.user)
+        recipes = Recipe.objects.filter(shoppingcart_by__user=request.user)
         ingredients = RecipeIngredient.objects.filter(
             recipe__in=recipes
         ).values(
