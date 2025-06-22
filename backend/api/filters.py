@@ -1,7 +1,7 @@
 import django_filters
 from django_filters.rest_framework import FilterSet
 
-from recipes.models import Favorite, Ingredient, Recipe
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart
 
 
 class IngredientFilter(FilterSet):
@@ -42,9 +42,13 @@ class RecipeFilter(FilterSet):
         return queryset.exclude(id__in=favorite_ids)
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
+        print('🔥 filter_is_in_shopping_cart вызван! value =', value)
         user = self.request.user
         if not user.is_authenticated:
             return queryset.none() if value else queryset
+        cart_ids = ShoppingCart.objects.filter(
+            user=user
+        ).values_list('recipe_id', flat=True)
         if value:
-            return queryset.filter(shoppingcarts_by__user=user)
-        return queryset.exclude(shoppingcarts_by__user=user)
+            return queryset.filter(id__in=cart_ids)
+        return queryset.exclude(id__in=cart_ids)
