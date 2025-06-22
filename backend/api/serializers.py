@@ -224,14 +224,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         max_length=None,
         use_url=True
     )
-    # is_favorited = serializers.BooleanField(read_only=True)
-    # is_in_shopping_cart = serializers.BooleanField(read_only=True)
-    is_favorited = serializers.BooleanField(
-        source='annotated_is_favorited', read_only=True
-    )
-    is_in_shopping_cart = serializers.BooleanField(
-        source='annotated_is_in_shopping_cart', read_only=True
-    )
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -239,6 +233,12 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'is_in_shopping_cart', 'name', 'image', 'text',
                   'cooking_time'
                   )
+
+    def get_is_favorited(self, obj):
+        return getattr(obj, 'is_favorited', False)
+
+    def get_is_in_shopping_cart(self, obj):
+        return getattr(obj, 'is_in_shopping_cart', False)
 
     def to_representation(self, instance):
         """Добавление тегов и картинки к рецепту."""
